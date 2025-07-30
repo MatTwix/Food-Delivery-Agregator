@@ -1,0 +1,29 @@
+package database
+
+import (
+	"context"
+	"log"
+
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+func NewConnection() *pgxpool.Pool {
+	cfg := config.LoadConfig()
+
+	if cfg.DbSource == "" {
+		log.Fatal("DB_SOURCE environment variable is not set")
+	}
+
+	pool, err := pgxpool.New(context.Background(), cfg.DbSource)
+	if err != nil {
+		log.Fatalf("Error creating connection pool: %v", err)
+	}
+
+	if err := pool.Ping(context.Background()); err != nil {
+		log.Fatalf("Error pinging database: %v", err)
+	}
+
+	log.Println("Successfully connected to the database")
+	return pool
+}

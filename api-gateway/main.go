@@ -5,16 +5,18 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
+
+	"github.com/MatTwix/Food-Delivery-Agregator/api-gateway/config"
 )
 
 func main() {
-	restaurantsServiceUrl := os.Getenv("RESTAURANTS_SERVICE_URL")
-	if restaurantsServiceUrl == "" {
+	cfg := config.LoadConfig()
+
+	if cfg.RestaurantsServiceUrl == "" {
 		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
 	}
 
-	target, err := url.Parse(restaurantsServiceUrl)
+	target, err := url.Parse(cfg.RestaurantsServiceUrl)
 	if err != nil {
 		log.Fatalf("Error parsing target URL: %v", err)
 	}
@@ -23,9 +25,7 @@ func main() {
 
 	http.HandleFunc("/", proxy.ServeHTTP)
 
-	port := ":3000"
-
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
 		log.Fatalf("Error staring server: %v", err)
 	}
 }

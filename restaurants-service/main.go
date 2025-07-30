@@ -1,20 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/database"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/router"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Restaurants service is up and running!")
-	})
+	cfg := config.LoadConfig()
+	dbPool := database.NewConnection()
+	defer dbPool.Close()
 
-	port := ":3001"
-	log.Printf("Starting restaurants service on port %s", port)
+	r := chi.NewRouter()
+	router.SetupRoutes(r)
 
-	if err := http.ListenAndServe(port, nil); err != nil {
+	log.Printf("Starting restaurants service on port %s", cfg.Port)
+
+	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
 		log.Fatalf("Failed to start service: %v", err)
 	}
 }
