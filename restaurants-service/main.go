@@ -8,7 +8,7 @@ import (
 
 func main() {
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Restaurants service is up and running!")
+		fmt.Fprintf(w, "Restaurants service is up and running!")
 	})
 
 	port := ":3001"
