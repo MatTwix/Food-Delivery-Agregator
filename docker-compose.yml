@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres-db: 
+    image: postgres:14-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB-${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  restaurants_service:
+    build:
+      context: ./restaurants-service
+      dockerfile: Dockerfile
+    container_name: restaurants-service
+    restart: on-failure
+    depends_on:
+      - postgres-db
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@postgres-db:5432/${DB_NAME}?sslmode=disable
+  
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: on-failure
+    ports: 
+      - "3000:3000"
+    depends_on:
+      - restaurants_service
+    environment:
+      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001
+
+volumes:
+  postgres-data:
