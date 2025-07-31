@@ -12,8 +12,8 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-	dbPool := database.NewConnection()
-	defer dbPool.Close()
+	database.NewConnection()
+	defer database.DB.Close()
 
 	r := chi.NewRouter()
 	router.SetupRoutes(r)

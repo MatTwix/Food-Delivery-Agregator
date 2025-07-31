@@ -5,10 +5,13 @@ import (
 	"log"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewConnection() *pgxpool.Pool {
+var DB *pgxpool.Pool
+
+func NewConnection() {
 	cfg := config.LoadConfig()
 
 	if cfg.DbSource == "" {
@@ -24,6 +27,8 @@ func NewConnection() *pgxpool.Pool {
 		log.Fatalf("Error pinging database: %v", err)
 	}
 
+	DB = pool
 	log.Println("Successfully connected to the database")
-	return pool
+
+	migrations.Migrate(DB)
 }
