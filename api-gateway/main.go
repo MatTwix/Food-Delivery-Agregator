@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/api-gateway/config"
 )
@@ -16,16 +17,41 @@ func main() {
 		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
 	}
 
-	target, err := url.Parse(cfg.RestaurantsServiceUrl)
+	restaurantsServiceUrl, err := url.Parse(cfg.RestaurantsServiceUrl)
 	if err != nil {
-		log.Fatalf("Error parsing target URL: %v", err)
+		log.Fatalf("Error parsing RESTAURANTS_SERVICE_URL: %v", err)
+	}
+	ordersServiceUrl, err := url.Parse(cfg.OrdersServiceUrl)
+	if err != nil {
+		log.Fatalf("Error parsing ORDERS_SERVICE_URL: %v", err)
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(target)
+	restaurantsProxy := httputil.NewSingleHostReverseProxy(restaurantsServiceUrl)
+	oredersProxy := httputil.NewSingleHostReverseProxy(ordersServiceUrl)
 
-	http.HandleFunc("/", proxy.ServeHTTP)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		log.Printf("Incoming request for: %s", path)
 
+		if after, ok := strings.CutPrefix(path, "/api/restaurants"); ok {
+			r.URL.Path = after
+			log.Printf("Forwarding to restaurants-service with path: %s", r.URL.Path)
+			restaurantsProxy.ServeHTTP(w, r)
+			return
+		}
+
+		if after, ok := strings.CutPrefix(path, "/api/orders"); ok {
+			r.URL.Path = after
+			log.Printf("Forwarding to orders-service with path: %s", r.URL.Path)
+			oredersProxy.ServeHTTP(w, r)
+			return
+		}
+
+		http.Error(w, "Not found", http.StatusNotFound)
+	})
+
+	log.Printf("Starting API Gateway on port %s", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
-		log.Fatalf("Error staring server: %v", err)
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
