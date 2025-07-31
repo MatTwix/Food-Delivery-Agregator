@@ -7,16 +7,17 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/database"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/router"
-	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	cfg := config.LoadConfig()
+
+	config.InitValidator()
+
 	database.NewConnection()
 	defer database.DB.Close()
 
-	r := chi.NewRouter()
-	router.SetupRoutes(r)
+	r := router.SetupRoutes(database.DB)
 
 	log.Printf("Starting restaurants service on port %s", cfg.Port)
 

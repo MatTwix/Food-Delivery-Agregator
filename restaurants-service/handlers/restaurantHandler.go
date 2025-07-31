@@ -1,0 +1,51 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/models"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
+)
+
+type RestaurantHandler struct {
+	store *store.RestaurantStore
+}
+
+type restaurantsInput struct {
+	Name        string `json:"name" validate:"required"`
+	Address     string `json:"address" validate:"required"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+func NewRestaurantHandler(s *store.RestaurantStore) *RestaurantHandler {
+	return &RestaurantHandler{store: s}
+}
+
+func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Request) {
+	var input restaurantsInput
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	}
+
+	if err := config.Validator.Struct(&input); err != nil {
+		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+	}
+
+	restaurant := models.Restaurant{
+		Name:        input.Name,
+		Address:     input.Address,
+		PhoneNumber: input.PhoneNumber,
+	}
+
+	if err := h.store.Create(r.Context(), &restaurant); err != nil {
+		http.Error(w, "Error creating restaurant", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(restaurant)
+}
