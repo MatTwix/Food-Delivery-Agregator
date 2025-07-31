@@ -1,0 +1,23 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
+)
+
+func main() {
+	cfg := config.LoadConfig()
+
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Orders service is up and running!")
+	})
+
+	log.Printf("Starting orders service on port %s", cfg.Port)
+
+	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
