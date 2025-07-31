@@ -18,7 +18,7 @@ func CreateRestaurantsTable(db *pgxpool.Pool) {
 	var tableExists bool
 	err = tx.QueryRow(ctx,
 		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'restaurants');").
-		Scan(tableExists)
+		Scan(&tableExists)
 
 	if err != nil {
 		log.Fatalf("Error cheking restaurants table existance: %v", err)
