@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  restaurants_service:
+  restaurants-service:
     build:
       context: ./restaurants-service
       dockerfile: Dockerfile
@@ -24,7 +24,36 @@ services:
       - "3001:3001"
     environment:
       - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@postgres-db:5432/${DB_NAME}?sslmode=disable
+
+  orders-db:
+    image: postgres:14-alpine
+    container_name: orders-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=orders
+    ports:
+      - "5433:5432"
+    volumes:
+      - orders-postgres-data:/var/lib/postgresql/data
   
+  orders-service:
+    build:
+      context: ./orders-service
+      dockerfile: Dockerfile
+    container_name: orders-service
+    restart: on-failure
+    depends_on:
+      - orders-db
+      - kafka
+    ports:
+      - "3002:3002"
+    environment:
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@orders-db:5432/orders?sslmode=disable
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+    
+
   api-gateway:
     build:
       context: ./api-gateway
@@ -34,9 +63,44 @@ services:
     ports: 
       - "3000:3000"
     depends_on:
-      - restaurants_service
+      - restaurants-service
     environment:
       - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001
+      - ORDERS_SERVICE_URL=http://orders-service:3002
+    
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    depends_on:
+      - kafka
+    ports:
+      - "19000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
 
 volumes:
   postgres-data:
+  orders-postgres-data:
