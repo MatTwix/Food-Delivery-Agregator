@@ -16,6 +16,7 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		Port: port, DbSource: os.Getenv("DB_SOURCE"),
+		Port:     port,
+		DbSource: os.Getenv("DB_SOURCE"),
 	}
 }
