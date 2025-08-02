@@ -2,15 +2,18 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
 )
 
 type RestaurantHandler struct {
-	store *store.RestaurantStore
+	store    *store.RestaurantStore
+	producer *messaging.Producer
 }
 
 type restaurantsInput struct {
@@ -19,8 +22,11 @@ type restaurantsInput struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
-func NewRestaurantHandler(s *store.RestaurantStore) *RestaurantHandler {
-	return &RestaurantHandler{store: s}
+func NewRestaurantHandler(s *store.RestaurantStore, p *messaging.Producer) *RestaurantHandler {
+	return &RestaurantHandler{
+		store:    s,
+		producer: p,
+	}
 }
 
 func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +49,13 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 	if err := h.store.Create(r.Context(), &restaurant); err != nil {
 		http.Error(w, "Error creating restaurant", http.StatusInternalServerError)
 		return
+	}
+
+	eventBody, err := json.Marshal(restaurant)
+	if err != nil {
+		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+	} else {
+		h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

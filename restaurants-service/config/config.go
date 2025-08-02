@@ -6,6 +6,8 @@ type Config struct {
 	Port string
 
 	DbSource string
+
+	KafkaBrokers string
 }
 
 func LoadConfig() Config {
@@ -18,5 +20,7 @@ func LoadConfig() Config {
 	return Config{
 		Port:     port,
 		DbSource: os.Getenv("DB_SOURCE"),
+
+		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
 	}
 }
