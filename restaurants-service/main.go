@@ -9,7 +9,6 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/database"
-	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/routes"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
 	"google.golang.org/grpc"
 )
@@ -41,7 +40,7 @@ func main() {
 		}
 	}()
 
-	r := routes.SetupRoutes(db)
+	r := api.SetupRoutes(db)
 
 	log.Printf("Starting restaurants service on port %s", cfg.Port)
 

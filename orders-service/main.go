@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/database"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/messaging"
@@ -15,22 +15,23 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 
+	config.InitValidator()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	database.NewConnection()
+	db := database.DB
 
-	restaurantStore := store.NewRestaurantStore(database.DB)
+	restaurantStore := store.NewRestaurantStore(db)
 
 	messaging.StartConsumer(ctx, restaurantStore)
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Orders service is up and running!")
-	})
+	router := api.SetupRoutes(db)
 
 	log.Printf("Starting orders service on port %s", cfg.Port)
 
-	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
+	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

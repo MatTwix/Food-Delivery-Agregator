@@ -34,10 +34,12 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
 
 	if err := config.Validator.Struct(&input); err != nil {
 		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	restaurant := models.Restaurant{
