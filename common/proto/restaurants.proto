@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package restaurants;
+
+option go_package = "github.com/MatTwix/Food-Delivery-Agregator/common/proto";
+
+service RestaurantService {
+    rpc GetMenuItems(GetMenuItemsRequest) returns (GetMenuItemsResponse);
+}
+
+message GetMenuItemsRequest {
+    string restaurant_id = 1;
+    repeated string menu_item_ids = 2;
+}
+
+message GetMenuItemsResponse {
+    repeated MenuItem menu_items = 1;
+}
+
+message MenuItem {
+    string id = 1;
+    string name = 2;
+    double price = 3;
+}
