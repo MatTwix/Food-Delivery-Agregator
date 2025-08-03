@@ -2,11 +2,16 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/http"
 
+	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/database"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/routes"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -17,7 +22,26 @@ func main() {
 	database.NewConnection()
 	defer database.DB.Close()
 
-	r := routes.SetupRoutes(database.DB)
+	db := database.DB
+
+	go func() {
+		lis, err := net.Listen("tcp", cfg.GrpcPort)
+		if err != nil {
+			log.Fatalf("Error listening for gPRC: %v", err)
+		}
+
+		grpcServer := grpc.NewServer()
+		restaurantStore := api.NewGrpcServer(store.NewRestaurantsStore(db))
+		pb.RegisterRestaurantServiceServer(grpcServer, restaurantStore)
+
+		log.Printf("gRPC server listening on port: %v", cfg.GrpcPort)
+
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Fatalf("Error serving gRPC: %v", err)
+		}
+	}()
+
+	r := routes.SetupRoutes(db)
 
 	log.Printf("Starting restaurants service on port %s", cfg.Port)
 

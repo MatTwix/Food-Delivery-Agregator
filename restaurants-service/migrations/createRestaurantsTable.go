@@ -41,7 +41,7 @@ func CreateRestaurantsTable(db *pgxpool.Pool) {
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			log.Fatalf("Error comkiting transaction: %v", err)
+			log.Fatalf("Error commiting transaction: %v", err)
 		}
 
 		log.Println("Restaurants table created successfully!")
