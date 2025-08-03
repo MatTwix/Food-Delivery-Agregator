@@ -55,7 +55,7 @@ services:
     environment:
       - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@orders-db:5432/orders?sslmode=disable
       - KAFKA_BROKERS=${KAFKA_BROKERS}
-    
+      - GRPC_SERVER=4040
 
   api-gateway:
     build:

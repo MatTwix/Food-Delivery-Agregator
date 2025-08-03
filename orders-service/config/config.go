@@ -3,7 +3,8 @@ package config
 import "os"
 
 type Config struct {
-	Port string
+	Port     string
+	GrpcPort string
 
 	DbSource string
 
@@ -18,8 +19,11 @@ func LoadConfig() Config {
 	}
 
 	return Config{
-		Port:         port,
-		DbSource:     os.Getenv("DB_SOURCE"),
+		Port:     port,
+		GrpcPort: os.Getenv("GRPC_PORT"),
+
+		DbSource: os.Getenv("DB_SOURCE"),
+
 		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
 	}
 }
