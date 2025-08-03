@@ -2,15 +2,14 @@ module github.com/MatTwix/Food-Delivery-Agregator/restaurants-service
 
 go 1.23.6
 
-require (
-	github.com/MatTwix/Food-Delivery-Agregator/common v0.0.0-0010101000000-00000000000
-)
+require github.com/MatTwix/Food-Delivery-Agregator/common v0.0.0-0010101000000-00000000000
 
 require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/segmentio/kafka-go v0.4.48
+	google.golang.org/grpc v1.74.2
 )
 
 require (
@@ -28,7 +27,6 @@ require (
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
-	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )
