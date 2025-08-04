@@ -9,6 +9,7 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
+	"github.com/go-chi/chi/v5"
 )
 
 type RestaurantHandler struct {
@@ -39,6 +40,20 @@ func (h *RestaurantHandler) GetRestaurants(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(restaurants)
+}
+
+func (h *RestaurantHandler) GetRestaurantByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	restaurant, err := h.store.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Error getting restaurant by ID", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(restaurant)
 }
 
 func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Request) {
@@ -75,4 +90,67 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(restaurant)
+}
+
+func (h *RestaurantHandler) UpdateRestaurant(w http.ResponseWriter, r *http.Request) {
+	var input restaurantsInput
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := config.Validator.Struct(&input); err != nil {
+		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+
+	restaurant := models.Restaurant{
+		ID:          id,
+		Name:        input.Name,
+		Address:     input.Address,
+		PhoneNumber: input.PhoneNumber,
+	}
+
+	if err := h.store.Update(r.Context(), &restaurant); err != nil {
+		http.Error(w, "Error updating restaurant", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: make updates topic
+
+	// eventBody, err := json.Marshal(restaurant)
+	// if err != nil {
+	// 	log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+	// } else {
+	// 	h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
+	// }
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(restaurant)
+}
+
+func (h *RestaurantHandler) DeleteRestaurant(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if err := h.store.Delete(r.Context(), id); err != nil {
+		http.Error(w, "Error deleting restaurant", http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: make deletions topic
+
+	// eventBody, err := json.Marshal(restaurant)
+	// if err != nil {
+	// 	log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+	// } else {
+	// 	h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
+	// }
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Restaurant deleted!")
 }

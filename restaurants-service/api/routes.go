@@ -33,7 +33,10 @@ func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
 
 	r.Route("/restaurants", func(r chi.Router) {
 		r.Get("/", restaurantHandler.GetRestaurants)
+		r.Get("/{id}", restaurantHandler.GetRestaurantByID)
 		r.Post("/", restaurantHandler.CreateRestaurant)
+		r.Put("/{id}", restaurantHandler.UpdateRestaurant)
+		r.Delete("/{id}", restaurantHandler.DeleteRestaurant)
 	})
 
 	return r

@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/models"
@@ -48,6 +49,32 @@ func (s *RestaurantStore) GetAll(ctx context.Context) ([]models.Restaurant, erro
 	return restaurants, nil
 }
 
+func (s *RestaurantStore) GetByID(ctx context.Context, id string) (models.Restaurant, error) {
+	query := `
+		SELECT
+		name, address, phone_number, created_at, updated_at
+		FROM
+		restaurants
+		WHERE
+		id = $1
+	`
+
+	restaurant := models.Restaurant{
+		ID: id,
+	}
+
+	err := s.db.QueryRow(ctx, query, id).
+		Scan(
+			&restaurant.Name,
+			&restaurant.Address,
+			&restaurant.PhoneNumber,
+			&restaurant.CreatedAt,
+			&restaurant.UpdatedAt,
+		)
+
+	return restaurant, err
+}
+
 func (s *RestaurantStore) Create(ctx context.Context, restaurant *models.Restaurant) error {
 	query := `
 		INSERT INTO restaurants 
@@ -60,6 +87,42 @@ func (s *RestaurantStore) Create(ctx context.Context, restaurant *models.Restaur
 		Scan(&restaurant.ID, &restaurant.CreatedAt, &restaurant.UpdatedAt)
 
 	return err
+}
+
+func (s *RestaurantStore) Update(ctx context.Context, restaurant *models.Restaurant) error {
+	query := `
+		UPDATE restaurants
+		SET
+		name = $1, address = $2, phone_number = $3
+		WHERE
+		id = $4
+		RETURNING created_at, updated_at
+	`
+
+	err := s.db.QueryRow(ctx, query, restaurant.Name, restaurant.Address, restaurant.PhoneNumber, restaurant.ID).
+		Scan(&restaurant.CreatedAt, &restaurant.UpdatedAt)
+
+	return err
+}
+
+func (s *RestaurantStore) Delete(ctx context.Context, id string) error {
+	query := `
+		DELETE FROM restaurants
+		WHERE 
+		id = $1
+	`
+
+	result, err := s.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("restaurant not found")
+	}
+
+	return nil
 }
 
 func (s *RestaurantStore) GetMenuItemsByIDs(ctx context.Context, itemIDs []string) ([]*pb.MenuItem, error) {
