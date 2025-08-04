@@ -14,8 +14,8 @@ services:
 
   restaurants-service:
     build:
-      context: ./restaurants-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./restaurants-service/Dockerfile
     container_name: restaurants-service
     restart: on-failure
     depends_on:
@@ -43,8 +43,8 @@ services:
   
   orders-service:
     build:
-      context: ./orders-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./orders-service/Dockerfile
     container_name: orders-service
     restart: on-failure
     depends_on:
@@ -59,8 +59,8 @@ services:
 
   api-gateway:
     build:
-      context: ./api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./api-gateway/Dockerfile
     container_name: api-gateway
     restart: on-failure
     ports: 

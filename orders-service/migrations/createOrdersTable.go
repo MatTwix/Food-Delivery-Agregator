@@ -27,7 +27,7 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 	if !tableExists {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE orders (
-				id SERIAL PRIMARY KEY,
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 				restaurant_id UUID NOT NULL,
 				user_id UUID,
 				total_price NUMERIC(10, 2) NOT NULL,
@@ -36,8 +36,8 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 				updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 			);
 
-			CREATE IF NOT EXISTS idx_orders_restaurant_id ON orders(restaurant_id);
-			CREATE IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+			CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id ON orders(restaurant_id);
+			CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 		`)
 		if err != nil {
 			log.Fatalf("Error creating orders table: %v", err)

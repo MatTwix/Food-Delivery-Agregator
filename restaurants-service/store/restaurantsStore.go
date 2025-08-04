@@ -16,6 +16,38 @@ func NewRestaurantsStore(db *pgxpool.Pool) *RestaurantStore {
 	return &RestaurantStore{db: db}
 }
 
+func (s *RestaurantStore) GetAll(ctx context.Context) ([]models.Restaurant, error) {
+	query := `
+		SELECT 
+		id, name, address, phone_number, created_at, updated_at 
+		FROM
+		restaurants
+	`
+	rows, err := s.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var restaurants []models.Restaurant
+	for rows.Next() {
+		var restaurant models.Restaurant
+		if err := rows.Scan(
+			&restaurant.ID,
+			&restaurant.Name,
+			&restaurant.Address,
+			&restaurant.PhoneNumber,
+			&restaurant.CreatedAt,
+			&restaurant.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		restaurants = append(restaurants, restaurant)
+	}
+
+	return restaurants, nil
+}
+
 func (s *RestaurantStore) Create(ctx context.Context, restaurant *models.Restaurant) error {
 	query := `
 		INSERT INTO restaurants 

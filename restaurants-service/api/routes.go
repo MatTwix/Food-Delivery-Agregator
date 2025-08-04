@@ -32,6 +32,7 @@ func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
 	restaurantHandler := handlers.NewRestaurantHandler(restaurantStore, kafkaProducer)
 
 	r.Route("/restaurants", func(r chi.Router) {
+		r.Get("/", restaurantHandler.GetRestaurants)
 		r.Post("/", restaurantHandler.CreateRestaurant)
 	})
 

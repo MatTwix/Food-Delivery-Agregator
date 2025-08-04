@@ -2,12 +2,21 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+COPY common/go.mod common/go.sum ./common/
+COPY orders-service/go.mod orders-service/go.sum ./orders-service/
+
+RUN echo "go 1.24" >> go.work
+RUN echo "use (" >> go.work
+RUN echo "  ./common" >> go.work
+RUN echo "  ./orders-service" >> go.work
+RUN echo ")" >> go.work
+
 RUN go mod download
 
-COPY . .
+COPY common/ ./common/
+COPY orders-service/ ./orders-service/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./orders-service
 
 FROM alpine:latest
 

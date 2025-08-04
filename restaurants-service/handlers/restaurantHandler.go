@@ -29,6 +29,18 @@ func NewRestaurantHandler(s *store.RestaurantStore, p *messaging.Producer) *Rest
 	}
 }
 
+func (h *RestaurantHandler) GetRestaurants(w http.ResponseWriter, r *http.Request) {
+	restaurants, err := h.store.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, "Error getting restaurants", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(restaurants)
+}
+
 func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Request) {
 	var input restaurantsInput
 

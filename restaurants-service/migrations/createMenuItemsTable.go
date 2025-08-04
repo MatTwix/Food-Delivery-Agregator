@@ -27,7 +27,7 @@ func CreateMenuItemsTable(db *pgxpool.Pool) {
 	if !tableExists {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE menu_items (
-				id SERIAL PRIMARY KEY,
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 				restautant_id INTEGER NOT NULL,
 				name VARCHAR(255) NOT NULL,
 				description TEST,

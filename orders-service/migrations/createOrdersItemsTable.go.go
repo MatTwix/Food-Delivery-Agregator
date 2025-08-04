@@ -27,7 +27,7 @@ func CreateOrdersItemsTable(db *pgxpool.Pool) {
 	if !tableExists {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE orders_items (
-				id SERIAL PRIMARY KEY,
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 				order_id UUID NOT NULL,
 				menu_item_id UUID NOT NULL,
 				quantity INT NOT NULL,
