@@ -28,3 +28,16 @@ func (s *RestaurantStore) Upsert(ctx context.Context, restaurant *models.Restaur
 
 	return err
 }
+
+func (s *RestaurantStore) Delete(ctx context.Context, id string) error {
+	query := `
+		DELETE FROM 
+		restaurants
+		WHERE
+		id = $1
+	`
+
+	_, err := s.db.Exec(ctx, query, id)
+
+	return err
+}

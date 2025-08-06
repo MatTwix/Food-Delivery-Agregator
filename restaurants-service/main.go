@@ -9,6 +9,7 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/database"
+	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
 	"google.golang.org/grpc"
 )
@@ -20,6 +21,8 @@ func main() {
 
 	database.NewConnection()
 	defer database.DB.Close()
+
+	messaging.InitTopics()
 
 	db := database.DB
 

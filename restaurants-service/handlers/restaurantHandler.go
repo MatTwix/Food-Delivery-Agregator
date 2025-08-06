@@ -23,6 +23,10 @@ type restaurantsInput struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
+type DeletionMessage struct {
+	ID string `json:"id"`
+}
+
 func NewRestaurantHandler(s *store.RestaurantStore, p *messaging.Producer) *RestaurantHandler {
 	return &RestaurantHandler{
 		store:    s,
@@ -84,7 +88,7 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
 	} else {
-		h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
+		h.producer.Produce(r.Context(), messaging.RestaurantCreatedTopic, []byte(restaurant.ID), eventBody)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -119,14 +123,12 @@ func (h *RestaurantHandler) UpdateRestaurant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// TODO: make updates topic
-
-	// eventBody, err := json.Marshal(restaurant)
-	// if err != nil {
-	// 	log.Printf("Error marshaling restaurant for Kafka event: %v", err)
-	// } else {
-	// 	h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
-	// }
+	eventBody, err := json.Marshal(restaurant)
+	if err != nil {
+		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+	} else {
+		h.producer.Produce(r.Context(), messaging.RestaurantUpdatedTopic, []byte(restaurant.ID), eventBody)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -141,14 +143,16 @@ func (h *RestaurantHandler) DeleteRestaurant(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// TODO: make deletions topic
+	message := DeletionMessage{
+		ID: id,
+	}
 
-	// eventBody, err := json.Marshal(restaurant)
-	// if err != nil {
-	// 	log.Printf("Error marshaling restaurant for Kafka event: %v", err)
-	// } else {
-	// 	h.producer.Produce(r.Context(), []byte(restaurant.ID), eventBody)
-	// }
+	eventBody, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+	} else {
+		h.producer.Produce(r.Context(), messaging.RestaurantDeletedTopic, []byte(message.ID), eventBody)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
