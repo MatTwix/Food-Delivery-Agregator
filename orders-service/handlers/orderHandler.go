@@ -8,6 +8,7 @@ import (
 
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/store"
 )
@@ -24,13 +25,15 @@ type OrderHandler struct {
 	store           *store.OrderStore
 	restaurantStore *store.RestaurantStore
 	grpcClient      pb.RestaurantServiceClient
+	producer        *messaging.Producer
 }
 
-func NewOrderHandler(os *store.OrderStore, rs *store.RestaurantStore, grpc pb.RestaurantServiceClient) *OrderHandler {
+func NewOrderHandler(os *store.OrderStore, rs *store.RestaurantStore, grpc pb.RestaurantServiceClient, p *messaging.Producer) *OrderHandler {
 	return &OrderHandler{
 		store:           os,
 		restaurantStore: rs,
 		grpcClient:      grpc,
+		producer:        p,
 	}
 }
 
@@ -102,7 +105,12 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: send order.created event to kafka
+	eventBody, err := json.Marshal(order)
+	if err != nil {
+		log.Printf("Error marshaling order for Kafka event: %v", err)
+	} else {
+		h.producer.Produce(r.Context(), messaging.OrderCreatedTopic, []byte(order.ID), eventBody)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
