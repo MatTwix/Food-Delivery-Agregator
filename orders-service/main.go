@@ -24,8 +24,9 @@ func main() {
 	db := database.DB
 
 	restaurantStore := store.NewRestaurantStore(db)
+	orderStore := store.NewOrderStore(db)
 
-	messaging.StartConsumers(ctx, restaurantStore)
+	messaging.StartConsumers(ctx, restaurantStore, orderStore)
 
 	router := api.SetupRoutes(db)
 

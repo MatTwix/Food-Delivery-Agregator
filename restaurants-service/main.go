@@ -27,7 +27,7 @@ func main() {
 	db := database.DB
 
 	go func() {
-		lis, err := net.Listen("tcp", cfg.GrpcPort)
+		lis, err := net.Listen("tcp", ":"+cfg.GrpcPort)
 		if err != nil {
 			log.Fatalf("Error listening for gPRC: %v", err)
 		}

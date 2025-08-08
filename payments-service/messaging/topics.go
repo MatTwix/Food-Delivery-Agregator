@@ -13,8 +13,8 @@ import (
 type Topic string
 
 const (
-	PaymentSucceededTopic Topic = "restaurant.created"
-	PaymentFailedTopic    Topic = "restaurant.updated"
+	PaymentSucceededTopic Topic = "payment.succeeded"
+	PaymentFailedTopic    Topic = "payment.failed"
 
 	OrderCreatedTopic Topic = "order.created"
 	OrderUpdatedTopic Topic = "order.updated"
@@ -23,6 +23,9 @@ const (
 var Topics = []Topic{
 	PaymentSucceededTopic,
 	PaymentFailedTopic,
+
+	OrderCreatedTopic,
+	OrderUpdatedTopic,
 }
 
 func InitTopics() {

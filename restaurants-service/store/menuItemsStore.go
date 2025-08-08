@@ -130,7 +130,7 @@ func (s *MenuItemStore) Create(ctx context.Context, menuItem *models.MenuItem) e
 func (s *MenuItemStore) Update(ctx context.Context, menuItem *models.MenuItem) error {
 	query := `
 		UPDATE menu_items
-		SET name = $1, description = $2, price = $3
+		SET name = $1, description = $2, price = $3, updated_at = NOW()
 		WHERE id = $4
 		RETURNING id, restaurant_id, created_at, updated_at
 	`

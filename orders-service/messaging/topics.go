@@ -18,6 +18,9 @@ const (
 	RestaurantDeletedTopic Topic = "restaurant.deleted"
 
 	OrderCreatedTopic Topic = "order.created"
+
+	PaymentSucceededTopic Topic = "payment.succeeded"
+	PaymentFailedTopic    Topic = "payment.failed"
 )
 
 var Topics = []Topic{

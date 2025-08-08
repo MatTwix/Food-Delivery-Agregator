@@ -92,7 +92,7 @@ func (s *RestaurantStore) Update(ctx context.Context, restaurant *models.Restaur
 	query := `
 		UPDATE restaurants
 		SET
-		name = $1, address = $2, phone_number = $3
+		name = $1, address = $2, phone_number = $3, updated_at = NOW()
 		WHERE
 		id = $4
 		RETURNING created_at, updated_at

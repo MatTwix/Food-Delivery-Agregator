@@ -13,20 +13,29 @@ import (
 )
 
 const (
-	GroupID = "orders-service-group"
+	RestaurantsGroupID = "orders-service-group-restaurants"
+	PaymentsGroupID    = "orders-service-group-payments"
 )
 
-func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore) {
-	go startTopicConsumer(ctx, RestaurantCreatedTopic, GroupID, func(ctx context.Context, msg kafka.Message) {
+func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore) {
+	go startTopicConsumer(ctx, RestaurantCreatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantCreated(ctx, msg, restaurantStore)
 	})
 
-	go startTopicConsumer(ctx, RestaurantUpdatedTopic, GroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, RestaurantUpdatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantUpdated(ctx, msg, restaurantStore)
 	})
 
-	go startTopicConsumer(ctx, RestaurantDeletedTopic, GroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, RestaurantDeletedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantDeleted(ctx, msg, restaurantStore)
+	})
+
+	go startTopicConsumer(ctx, PaymentSucceededTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
+		handlePaymentSucceeded(ctx, msg, orderStore)
+	})
+
+	go startTopicConsumer(ctx, PaymentFailedTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
+		handlePaymentFailed(ctx, msg, orderStore)
 	})
 }
 
@@ -121,4 +130,32 @@ func handleRestaurantDeleted(ctx context.Context, msg kafka.Message, store *stor
 	}
 
 	log.Printf("Successfully deleted restaurant '%s' from the local database.", restaurant.ID)
+}
+
+func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handeling 'payment.succeeded' event for order ID: %s", orderID)
+
+	if err := store.UpdateStatus(ctx, orderID, "paid"); err != nil {
+		log.Printf("Error updating order status to 'paid' for order %s: %v", orderID, err)
+		return
+	}
+
+	log.Printf("Order %s status updated to 'paid'.", orderID)
+
+	// Make event for order paid for delivery-service
+}
+
+func handlePaymentFailed(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handeling 'payment.failed' event for order ID: %s", orderID)
+
+	if err := store.UpdateStatus(ctx, orderID, "payment_failed"); err != nil {
+		log.Printf("Error updating order status to 'payment_failed' for order %s: %v", orderID, err)
+		return
+	}
+
+	log.Printf("Order %s status updated to 'payment_failed'.", orderID)
+
+	// Make event for refund or notifier
 }

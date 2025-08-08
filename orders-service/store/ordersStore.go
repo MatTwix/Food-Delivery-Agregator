@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"log"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
 	"github.com/jackc/pgx/v5"
@@ -41,7 +42,7 @@ func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 
 	_, err = tx.CopyFrom(
 		ctx,
-		pgx.Identifier{"order_items"},
+		pgx.Identifier{"orders_items"},
 		[]string{"order_id", "menu_item_id", "quantity", "price"},
 		pgx.CopyFromRows(itemRows),
 	)
@@ -51,4 +52,23 @@ func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (s *OrderStore) UpdateStatus(ctx context.Context, orderID string, status string) error {
+	query := `
+		UPDATE orders
+		SET status = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := s.db.Exec(ctx, query, status, orderID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		log.Printf("Warning: order with ID %s is not found for status update.", orderID)
+	}
+
+	return nil
 }
