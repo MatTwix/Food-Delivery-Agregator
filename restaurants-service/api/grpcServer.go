@@ -20,7 +20,7 @@ func NewGrpcServer(s *store.MenuItemStore) *GrpcServer {
 func (s *GrpcServer) GetMenuItems(ctx context.Context, req *pb.GetMenuItemsRequest) (*pb.GetMenuItemsResponse, error) {
 	log.Printf("Received gRPC request for menu items: %v", req.MenuItemIds)
 
-	items, err := s.menuItemStore.GetMenuItemsByIDs(ctx, req.MenuItemIds)
+	items, err := s.menuItemStore.GetByIDs(ctx, req.MenuItemIds)
 	if err != nil {
 		log.Printf("Error getting menu items from store: %v", err)
 		return nil, err

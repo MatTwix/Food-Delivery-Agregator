@@ -39,5 +39,16 @@ func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
 		r.Delete("/{id}", restaurantHandler.DeleteRestaurant)
 	})
 
+	menuItemStore := store.NewMenuItemStore(db)
+	menuItemHandler := handlers.NewMenuItemHandler(menuItemStore)
+
+	r.Route("/menu_items", func(r chi.Router) {
+		r.Get("/", menuItemHandler.GetMenuItems)
+		r.Get("/restaurant/{id}", menuItemHandler.GetMenuItemsByRestaurantID)
+		r.Post("/", menuItemHandler.CreateMenuItem)
+		r.Put("/{id}", menuItemHandler.UpdateMenuItem)
+		r.Delete("/{id}", menuItemHandler.DeleteMenuItem)
+	})
+
 	return r
 }

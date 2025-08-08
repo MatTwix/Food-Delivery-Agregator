@@ -39,7 +39,7 @@ func (s *MenuItemStore) GetAll(ctx context.Context) ([]models.MenuItem, error) {
 			&menuItem.ID,
 			&menuItem.RestaurantID,
 			&menuItem.Name,
-			&menuItem.Desctiption,
+			&menuItem.Description,
 			&menuItem.Price,
 			&menuItem.CreatedAt,
 			&menuItem.UpdatedAt,
@@ -52,7 +52,7 @@ func (s *MenuItemStore) GetAll(ctx context.Context) ([]models.MenuItem, error) {
 	return menuItems, nil
 }
 
-func (s *MenuItemStore) GetMenuItemsByIDs(ctx context.Context, itemIDs []string) ([]*pb.MenuItem, error) {
+func (s *MenuItemStore) GetByIDs(ctx context.Context, itemIDs []string) ([]*pb.MenuItem, error) {
 	query := "SELECT id, name, price FROM menu_items WHERE id = ANY($1)"
 	rows, err := s.db.Query(ctx, query, itemIDs)
 
@@ -75,16 +75,53 @@ func (s *MenuItemStore) GetMenuItemsByIDs(ctx context.Context, itemIDs []string)
 	return items, nil
 }
 
+func (s *MenuItemStore) GetByRestaurantID(ctx context.Context, restauarntID string) ([]models.MenuItem, error) {
+	query := `
+		SELECT
+		id, restaurant_id, name, description, price, created_at, updated_at
+		FROM
+		menu_items
+		WHERE 
+		restaurant_id = $1
+	`
+
+	rows, err := s.db.Query(ctx, query, restauarntID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var menuItems []models.MenuItem
+
+	for rows.Next() {
+		var menuItem models.MenuItem
+		if err := rows.Scan(
+			&menuItem.ID,
+			&menuItem.RestaurantID,
+			&menuItem.Name,
+			&menuItem.Description,
+			&menuItem.Price,
+			&menuItem.CreatedAt,
+			&menuItem.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		menuItems = append(menuItems, menuItem)
+	}
+
+	return menuItems, nil
+}
+
 func (s *MenuItemStore) Create(ctx context.Context, menuItem *models.MenuItem) error {
 	query := `
 		INSERT INTO menu_items
-		(restauarnt_id, name, description, price)
+		(restaurant_id, name, description, price)
 		VALUES
 		($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at
 	`
 
-	err := s.db.QueryRow(ctx, query, menuItem.RestaurantID, menuItem.Name, menuItem.Desctiption, menuItem.Price).
+	err := s.db.QueryRow(ctx, query, menuItem.RestaurantID, menuItem.Name, menuItem.Description, menuItem.Price).
 		Scan(&menuItem.ID, &menuItem.CreatedAt, &menuItem.UpdatedAt)
 
 	return err
@@ -93,13 +130,13 @@ func (s *MenuItemStore) Create(ctx context.Context, menuItem *models.MenuItem) e
 func (s *MenuItemStore) Update(ctx context.Context, menuItem *models.MenuItem) error {
 	query := `
 		UPDATE menu_items
-		SET name = $1, description = $2, price = $3)
+		SET name = $1, description = $2, price = $3
 		WHERE id = $4
-		RETURNING id, created_at, updated_at
+		RETURNING id, restaurant_id, created_at, updated_at
 	`
 
-	err := s.db.QueryRow(ctx, query, menuItem.RestaurantID, menuItem.Name, menuItem.Desctiption, menuItem.Price).
-		Scan(&menuItem.ID, &menuItem.CreatedAt, &menuItem.UpdatedAt)
+	err := s.db.QueryRow(ctx, query, menuItem.Name, menuItem.Description, menuItem.Price, menuItem.ID).
+		Scan(&menuItem.ID, &menuItem.RestaurantID, &menuItem.CreatedAt, &menuItem.UpdatedAt)
 
 	return err
 }

@@ -28,9 +28,9 @@ func CreateMenuItemsTable(db *pgxpool.Pool) {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE menu_items (
 				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-				restautant_id INTEGER NOT NULL,
+				restaurant_id UUID NOT NULL,
 				name VARCHAR(255) NOT NULL,
-				description TEST,
+				description TEXT,
 				price NUMERIC(10, 2) NOT NULL,
 				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 				updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
