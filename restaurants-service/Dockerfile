@@ -16,7 +16,7 @@ RUN go mod download
 COPY common/ ./common/
 COPY restaurants-service/ ./restaurants-service/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./restaurants-service
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./restaurants-service/
 
 FROM alpine:latest
 

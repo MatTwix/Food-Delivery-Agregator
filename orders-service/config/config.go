@@ -20,7 +20,7 @@ func LoadConfig() Config {
 
 	return Config{
 		Port:     port,
-		GrpcPort: os.Getenv("GRPC_PORT"),
+		GrpcPort: os.Getenv("GRPC_SERVER"),
 
 		DbSource: os.Getenv("DB_SOURCE"),
 

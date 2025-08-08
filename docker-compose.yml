@@ -57,6 +57,17 @@ services:
       - KAFKA_BROKERS=${KAFKA_BROKERS}
       - GRPC_SERVER=4040
 
+  payments-service:
+    build:
+      context: .
+      dockerfile: ./payments-service/Dockerfile
+    container_name: payments-service
+    restart: on-failure
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
   api-gateway:
     build:
       context: .

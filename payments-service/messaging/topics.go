@@ -6,26 +6,23 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/config"
 	"github.com/segmentio/kafka-go"
 )
 
 type Topic string
 
 const (
-	RestaurantCreatedTopic Topic = "restaurant.created"
-	RestaurantUpdatedTopic Topic = "restaurant.updated"
-	RestaurantDeletedTopic Topic = "restaurant.deleted"
+	PaymentSucceededTopic Topic = "restaurant.created"
+	PaymentFailedTopic    Topic = "restaurant.updated"
 
 	OrderCreatedTopic Topic = "order.created"
+	OrderUpdatedTopic Topic = "order.updated"
 )
 
 var Topics = []Topic{
-	RestaurantCreatedTopic,
-	RestaurantUpdatedTopic,
-	RestaurantDeletedTopic,
-
-	OrderCreatedTopic,
+	PaymentSucceededTopic,
+	PaymentFailedTopic,
 }
 
 func InitTopics() {
