@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -123,27 +122,4 @@ func (s *RestaurantStore) Delete(ctx context.Context, id string) error {
 	}
 
 	return nil
-}
-
-func (s *RestaurantStore) GetMenuItemsByIDs(ctx context.Context, itemIDs []string) ([]*pb.MenuItem, error) {
-	query := "SELECT id, name, price FROM menu_items WHERE id = ANY($1)"
-	rows, err := s.db.Query(ctx, query, itemIDs)
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var items []*pb.MenuItem
-	for rows.Next() {
-		var item pb.MenuItem
-		var price float64
-		if err := rows.Scan(&item.Id, &item.Name, &price); err != nil {
-			return nil, err
-		}
-		item.Price = price
-		items = append(items, &item)
-	}
-
-	return items, nil
 }

@@ -10,17 +10,17 @@ import (
 
 type GrpcServer struct {
 	pb.UnimplementedRestaurantServiceServer
-	store *store.RestaurantStore
+	menuItemStore *store.MenuItemStore
 }
 
-func NewGrpcServer(s *store.RestaurantStore) *GrpcServer {
-	return &GrpcServer{store: s}
+func NewGrpcServer(s *store.MenuItemStore) *GrpcServer {
+	return &GrpcServer{menuItemStore: s}
 }
 
 func (s *GrpcServer) GetMenuItems(ctx context.Context, req *pb.GetMenuItemsRequest) (*pb.GetMenuItemsResponse, error) {
 	log.Printf("Received gRPC request for menu items: %v", req.MenuItemIds)
 
-	items, err := s.store.GetMenuItemsByIDs(ctx, req.MenuItemIds)
+	items, err := s.menuItemStore.GetMenuItemsByIDs(ctx, req.MenuItemIds)
 	if err != nil {
 		log.Printf("Error getting menu items from store: %v", err)
 		return nil, err

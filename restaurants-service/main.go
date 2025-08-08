@@ -33,8 +33,8 @@ func main() {
 		}
 
 		grpcServer := grpc.NewServer()
-		restaurantStore := api.NewGrpcServer(store.NewRestaurantsStore(db))
-		pb.RegisterRestaurantServiceServer(grpcServer, restaurantStore)
+		menuItemStore := api.NewGrpcServer(store.NewMenuItemStore(db))
+		pb.RegisterRestaurantServiceServer(grpcServer, menuItemStore)
 
 		log.Printf("gRPC server listening on port: %v", cfg.GrpcPort)
 
