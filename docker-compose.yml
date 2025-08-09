@@ -79,6 +79,34 @@ services:
     environment:
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
+  couriers-db: 
+    image: postgres:14-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=couriers
+    ports:
+      - "5434:5432"
+    volumes:
+      - couriers-service:/var/lib/postgresql/data
+
+  couriers-service:
+    build:
+      context: .
+      dockerfile: ./couriers-service/Dockerfile
+    container_name: couriers-service
+    restart: on-failure
+    depends_on:
+      - couriers-db
+      - kafka
+    ports:
+      - "3003:3003"
+    environment:
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@orders-db:5432/couriers?sslmode=disable
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
   api-gateway:
     build:
       context: .
@@ -92,6 +120,7 @@ services:
     environment:
       - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001
       - ORDERS_SERVICE_URL=http://orders-service:3002
+      - COURIERS_SERVICE_URL=http://couriers-service:3003
     
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0

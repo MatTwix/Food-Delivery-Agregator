@@ -7,6 +7,7 @@ type Config struct {
 
 	RestaurantsServiceUrl string
 	OrdersServiceUrl      string
+	CouriersServiceUrl    string
 }
 
 func LoadConfig() Config {
@@ -21,5 +22,6 @@ func LoadConfig() Config {
 
 		RestaurantsServiceUrl: os.Getenv("RESTAURANTS_SERVICE_URL"),
 		OrdersServiceUrl:      os.Getenv("ORDERS_SERVICE_URL"),
+		CouriersServiceUrl:    os.Getenv("COURIERS_SERVICE_URL"),
 	}
 }

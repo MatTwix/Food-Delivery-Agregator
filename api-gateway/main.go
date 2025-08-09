@@ -16,6 +16,12 @@ func main() {
 	if cfg.RestaurantsServiceUrl == "" {
 		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
 	}
+	if cfg.OrdersServiceUrl == "" {
+		log.Fatal("ORDERS_SERVICE_URL is not set")
+	}
+	if cfg.CouriersServiceUrl == "" {
+		log.Fatal("COURIERS_SERVICE_URL is not set")
+	}
 
 	restaurantsServiceUrl, err := url.Parse(cfg.RestaurantsServiceUrl)
 	if err != nil {
@@ -25,9 +31,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error parsing ORDERS_SERVICE_URL: %v", err)
 	}
+	couriersServiceUrl, err := url.Parse(cfg.CouriersServiceUrl)
+	if err != nil {
+		log.Fatalf("Error parsing COURIERS_SERVICE_URL: %v", err)
+	}
 
 	restaurantsProxy := httputil.NewSingleHostReverseProxy(restaurantsServiceUrl)
 	oredersProxy := httputil.NewSingleHostReverseProxy(ordersServiceUrl)
+	couriersProxy := httputil.NewSingleHostReverseProxy(couriersServiceUrl)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -44,6 +55,13 @@ func main() {
 			r.URL.Path = after
 			log.Printf("Forwarding to orders-service with path: %s", r.URL.Path)
 			oredersProxy.ServeHTTP(w, r)
+			return
+		}
+
+		if after, ok := strings.CutPrefix(path, "/api/couriers"); ok {
+			r.URL.Path = after
+			log.Printf("Forwarding to couriers-service with path: %s", r.URL.Path)
+			couriersProxy.ServeHTTP(w, r)
 			return
 		}
 
