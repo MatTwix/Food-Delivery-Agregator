@@ -75,7 +75,7 @@ func handleOrderCreated(ctx context.Context, msg kafka.Message, p *Producer) {
 
 	// imitating payment process
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	if rand.Float32() < 0.8 {
 		log.Printf("Payment for order %s SUCCEEDED", event.ID)

@@ -68,6 +68,17 @@ services:
     environment:
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
+  notification-service:
+    build: 
+      context: .
+      dockerfile: ./notification-service/Dockerfile
+    container_name: notification-service
+    restart: on-failure
+    depends_on: 
+      - kafka
+    environment:
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
   api-gateway:
     build:
       context: .
