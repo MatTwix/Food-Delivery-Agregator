@@ -27,7 +27,7 @@ func CreateDeliveriesTable(db *pgxpool.Pool) {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE deliveries (
 				order_id UUID PRIMARY KEY,
-				courier_id UUID PRIMARY KEY REFERENCES couriers(id),
+				courier_id UUID NOT NULL REFERENCES couriers(id),
 				assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 			);
 

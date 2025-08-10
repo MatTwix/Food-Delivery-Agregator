@@ -21,6 +21,10 @@ type OrderDeliveredEvent struct {
 	OrderID string `json:"order_id"`
 }
 
+type CourierAssignedEvent struct {
+	CourierID string `json:"courier_id"`
+}
+
 const (
 	PaymentsGroupID = "couriers-service-group-payments"
 
@@ -77,8 +81,8 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.CourierStore, p *Producer) {
 	log.Println("Handling 'order.paid' event...")
 
-	var event OrderPaidEvent
-	if err := json.Unmarshal(msg.Value, &event); err != nil {
+	var receivedEvent OrderPaidEvent
+	if err := json.Unmarshal(msg.Value, &receivedEvent); err != nil {
 		log.Printf("Error unmarshaling Kafka message: %v", err)
 		return
 	}
@@ -87,8 +91,8 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.Courie
 	courier, err := store.GetAvailable(ctx)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Printf("No available couriers for order %s. Publishing failure event.", event.ID)
-			p.Produce(ctx, CourierSearchFailedTopic, []byte(event.ID), msg.Value)
+			log.Printf("No available couriers for order %s. Publishing failure event.", receivedEvent.ID)
+			p.Produce(ctx, CourierSearchFailedTopic, []byte(receivedEvent.ID), msg.Value)
 		} else {
 			log.Printf("Error searching available courier: %v", err)
 		}
@@ -100,15 +104,19 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.Courie
 		return
 	}
 
-	eventBody, err := json.Marshal(courier)
+	sendingEvent := CourierAssignedEvent{
+		CourierID: receivedEvent.ID,
+	}
+
+	eventBody, err := json.Marshal(sendingEvent)
 	if err != nil {
 		log.Printf("Error marshaling courier for Kafka event: %v", err)
 		return
 	} else {
-		p.Produce(ctx, CourierAssignedTopic, []byte(event.ID), eventBody)
+		p.Produce(ctx, CourierAssignedTopic, []byte(receivedEvent.ID), eventBody)
 	}
 
-	log.Printf("Successfully assigned courier for order %s.", event.ID)
+	log.Printf("Successfully assigned courier for order %s.", receivedEvent.ID)
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore) {

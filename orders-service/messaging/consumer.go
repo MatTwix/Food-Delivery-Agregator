@@ -16,12 +16,21 @@ type OrderPaidEvent struct {
 	ID string `json:"id"`
 }
 
+type OrderDeliveredEvent struct {
+	OrderID string `json:"order_id"`
+}
+
+type CourierAssignedEvent struct {
+	CourierID string `json:"courier_id"`
+}
+
 const (
 	RestaurantsGroupID = "orders-service-group-restaurants"
 	PaymentsGroupID    = "orders-service-group-payments"
-
-	CouriersGroupID = "couriers-service-group"
+	CouriersGroupID    = "orders-service-group-couriers"
 )
+
+//TODO: refactor some consumers: make order delivery status changing be provided by single consumer
 
 func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore, p *Producer) {
 	go startTopicConsumer(ctx, RestaurantCreatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
@@ -50,6 +59,10 @@ func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore,
 
 	go startTopicConsumer(ctx, CourierSearchFailedTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleCourierSearchFailed(ctx, msg, orderStore)
+	})
+
+	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+		handleOrderDelivered(ctx, msg, orderStore)
 	})
 }
 
@@ -91,7 +104,7 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 }
 
 func handleRestaurantCreated(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
-	log.Printf("Handling 'restaurant.created' event...")
+	log.Printf("[Consumer ID: %p] Handling 'restaurant.created' event...", store)
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
@@ -188,13 +201,13 @@ func handleCourierAssigned(ctx context.Context, msg kafka.Message, store *store.
 	orderID := string(msg.Key)
 	log.Printf("Handling 'courier.assigned' event for order ID: %s", orderID)
 
-	var courier models.Courier
-	if err := json.Unmarshal(msg.Value, &courier); err != nil {
+	var event CourierAssignedEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		log.Printf("Error unmarshaling Kafka message: %v", err)
 		return
 	}
 
-	if err := store.AssignCourier(ctx, orderID, courier.ID); err != nil {
+	if err := store.AssignCourier(ctx, orderID, event.CourierID); err != nil {
 		log.Printf("Error assigning courier: %v", err)
 		return
 	}
@@ -212,4 +225,16 @@ func handleCourierSearchFailed(ctx context.Context, msg kafka.Message, store *st
 	}
 
 	log.Printf("Order %s status updated to 'no_couriers_available.'", orderID)
+}
+
+func handleOrderDelivered(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handling 'order.delivered' event for order id: %s", orderID)
+
+	if err := store.UpdateStatus(ctx, orderID, "delivered"); err != nil {
+		log.Printf("Error updating order status to 'delivered': %v", err)
+		return
+	}
+
+	log.Printf("Order %s status updated to 'delivered'.", orderID)
 }

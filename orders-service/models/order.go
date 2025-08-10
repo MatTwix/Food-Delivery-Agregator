@@ -1,17 +1,20 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Order struct {
-	ID           string      `json:"id"`
-	RestaurantID string      `json:"restaurant_id"`
-	UserID       string      `json:"user_id,omitempty"`
-	TotalPrice   float64     `json:"total_price"`
-	Status       string      `json:"status"`
-	CourierID    string      `json:"courier_id,omitempty"`
-	Items        []OrderItem `json:"items"`
-	CreatedAt    time.Time   `json:"created_at"`
-	UpdatedAt    time.Time   `json:"updated_at"`
+	ID           string         `json:"id"`
+	RestaurantID string         `json:"restaurant_id"`
+	UserID       sql.NullString `json:"user_id,omitempty"`
+	TotalPrice   float64        `json:"total_price"`
+	Status       string         `json:"status"`
+	CourierID    sql.NullString `json:"courier_id,omitempty"`
+	Items        []OrderItem    `json:"items"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
 }
 
 type OrderItem struct {

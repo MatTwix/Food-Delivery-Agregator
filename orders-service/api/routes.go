@@ -19,12 +19,14 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, orderStore *store.Order
 
 	orderHandler := handlers.NewOrderHandler(orderStore, restaurantStore, grpcClient, kafkaProducer)
 
-	r.Route("/orders", func(r chi.Router) {
-		r.Post("/", orderHandler.CreateOrder)
-	})
-
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Orders service is up and running!")
+	})
+
+	r.Route("/orders", func(r chi.Router) {
+		r.Get("/", orderHandler.GetAllOrders)
+		r.Get("/{id}", orderHandler.GetOrderByID)
+		r.Post("/", orderHandler.CreateOrder)
 	})
 
 	return r

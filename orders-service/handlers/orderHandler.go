@@ -11,6 +11,7 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/store"
+	"github.com/go-chi/chi/v5"
 )
 
 type CreateOrderRequest struct {
@@ -35,6 +36,33 @@ func NewOrderHandler(os *store.OrderStore, rs *store.RestaurantStore, grpc pb.Re
 		grpcClient:      grpc,
 		producer:        p,
 	}
+}
+
+func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := h.store.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, "Error getting orders", http.StatusInternalServerError)
+		log.Printf("Error getting orders: %v", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(orders)
+}
+
+func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	order, err := h.store.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
+		log.Printf("Error getting order by id: %v", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(order)
 }
 
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
