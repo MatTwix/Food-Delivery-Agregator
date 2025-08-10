@@ -18,7 +18,7 @@ type OrderCreatedEvent struct {
 }
 
 const (
-	GroupID = "orders-service-group-payments"
+	GroupID = "payments-service-group"
 )
 
 func StartConsumers(ctx context.Context, p *Producer) {

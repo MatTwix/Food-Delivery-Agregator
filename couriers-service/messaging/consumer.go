@@ -18,7 +18,7 @@ type OrderPaidEvent struct {
 }
 
 const (
-	PaymentsGroupID = "orders-service-group-payments"
+	PaymentsGroupID = "couriers-service-group-payments"
 
 	CouriersGroupID = "couriers-service-group"
 )

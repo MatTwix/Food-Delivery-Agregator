@@ -107,8 +107,8 @@ func (h *CourierHandler) UpdateCourier(w http.ResponseWriter, r *http.Request) {
 		Status: input.Status,
 	}
 
-	if err := h.store.Create(r.Context(), &courier); err != nil {
-		http.Error(w, "Error creating courier", http.StatusInternalServerError)
+	if err := h.store.Update(r.Context(), &courier); err != nil {
+		http.Error(w, "Error updating courier", http.StatusInternalServerError)
 		return
 	}
 
