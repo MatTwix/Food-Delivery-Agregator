@@ -82,8 +82,8 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 		Topic:          string(topic),
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
-		CommitInterval: 1 * time.Second,  // Auto-commit offsets every second
-		StartOffset:    kafka.LastOffset, // Start from the latest offset to avoid reprocessing old messages
+		CommitInterval: 1 * time.Second,
+		StartOffset:    kafka.LastOffset,
 	})
 
 	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)

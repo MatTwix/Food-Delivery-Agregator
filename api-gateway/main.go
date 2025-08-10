@@ -72,4 +72,6 @@ func main() {
 	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
+
+	//TODO: add gracefull shutdown
 }
