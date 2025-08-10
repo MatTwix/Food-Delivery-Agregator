@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/handlers"
@@ -10,25 +9,18 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
+func SetupRoutes(restaurantStore *store.RestaurantStore, menuItemStore *store.MenuItemStore, kafkaProducer *messaging.Producer) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	kafkaProducer, err := messaging.NewProducer()
-	if err != nil {
-		log.Fatalf("Error creating Kafka producer: %v", err)
-	}
-
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Restaurants service is up and running!")
 	})
 
-	restaurantStore := store.NewRestaurantsStore(db)
 	restaurantHandler := handlers.NewRestaurantHandler(restaurantStore, kafkaProducer)
 
 	r.Route("/restaurants", func(r chi.Router) {
@@ -39,7 +31,6 @@ func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
 		r.Delete("/{id}", restaurantHandler.DeleteRestaurant)
 	})
 
-	menuItemStore := store.NewMenuItemStore(db)
 	menuItemHandler := handlers.NewMenuItemHandler(menuItemStore)
 
 	r.Route("/menu_items", func(r chi.Router) {

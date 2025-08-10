@@ -88,13 +88,25 @@ func (s *CourierStore) Create(ctx context.Context, courier *models.Courier) erro
 func (s *CourierStore) Update(ctx context.Context, courier *models.Courier) error {
 	query := `
 		UPDATE couriers
-		SET name = $1, status = $2
-		WHERE id = $3
-		RETURNING, created_at, updated_at
+		SET name = $1
+		WHERE id = $2
+		RETURNING created_at, updated_at
 	`
 
-	err := s.db.QueryRow(ctx, query, courier.Name, courier.Status, courier.ID).
+	err := s.db.QueryRow(ctx, query, courier.Name, courier.ID).
 		Scan(&courier.CreatedAt, &courier.UpdatedAt)
+
+	return err
+}
+
+func (s *CourierStore) UpdateStatus(ctx context.Context, id, status string) error {
+	query := `
+		UPDATE couriers
+		SET status = $1
+		WHERE id = $2
+	`
+
+	_, err := s.db.Exec(ctx, query, status, id)
 
 	return err
 }

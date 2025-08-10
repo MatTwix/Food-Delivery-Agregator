@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/store"
 	"github.com/go-chi/chi"
+	"github.com/jackc/pgx/v5"
 )
 
 type CourierHandler struct {
@@ -15,7 +17,7 @@ type CourierHandler struct {
 }
 
 type CourierInputCreate struct {
-	Name string `json:"string" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }
 
 type CourierInputUpdate struct {
@@ -44,6 +46,10 @@ func (h *CourierHandler) GetCouriers(w http.ResponseWriter, r *http.Request) {
 func (h *CourierHandler) GetAvailableCourier(w http.ResponseWriter, r *http.Request) {
 	courier, err := h.store.GetAvailable(r.Context())
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "No available couriers found", http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Error getting available courier", http.StatusInternalServerError)
 		return
 	}

@@ -12,12 +12,18 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+type OrderPaidEvent struct {
+	ID string `json:"id"`
+}
+
 const (
 	RestaurantsGroupID = "orders-service-group-restaurants"
 	PaymentsGroupID    = "orders-service-group-payments"
+
+	CouriersGroupID = "couriers-service-group"
 )
 
-func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore) {
+func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore, p *Producer) {
 	go startTopicConsumer(ctx, RestaurantCreatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantCreated(ctx, msg, restaurantStore)
 	})
@@ -31,11 +37,19 @@ func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore,
 	})
 
 	go startTopicConsumer(ctx, PaymentSucceededTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
-		handlePaymentSucceeded(ctx, msg, orderStore)
+		handlePaymentSucceeded(ctx, msg, orderStore, p)
 	})
 
 	go startTopicConsumer(ctx, PaymentFailedTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handlePaymentFailed(ctx, msg, orderStore)
+	})
+
+	go startTopicConsumer(ctx, CourierAssignedTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+		handleCourierAssigned(ctx, msg, orderStore)
+	})
+
+	go startTopicConsumer(ctx, CourierSearchFailedTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+		handleCourierSearchFailed(ctx, msg, orderStore)
 	})
 }
 
@@ -132,7 +146,7 @@ func handleRestaurantDeleted(ctx context.Context, msg kafka.Message, store *stor
 	log.Printf("Successfully deleted restaurant '%s' from the local database.", restaurant.ID)
 }
 
-func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store.OrderStore, p *Producer) {
 	orderID := string(msg.Key)
 	log.Printf("Handeling 'payment.succeeded' event for order ID: %s", orderID)
 
@@ -141,9 +155,19 @@ func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store
 		return
 	}
 
-	log.Printf("Order %s status updated to 'paid'.", orderID)
+	event := OrderPaidEvent{
+		ID: orderID,
+	}
 
-	// Make event for order paid for delivery-service
+	eventBody, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Error marshaling message for Kafka event: %v", err)
+		return
+	} else {
+		p.Produce(ctx, OrderPaidTopic, []byte(orderID), eventBody)
+	}
+
+	log.Printf("Order %s status updated to 'paid'.", orderID)
 }
 
 func handlePaymentFailed(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
@@ -158,4 +182,34 @@ func handlePaymentFailed(ctx context.Context, msg kafka.Message, store *store.Or
 	log.Printf("Order %s status updated to 'payment_failed'.", orderID)
 
 	// Make event for refund or notifier
+}
+
+func handleCourierAssigned(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handling 'courier.assigned' event for order ID: %s", orderID)
+
+	var courier models.Courier
+	if err := json.Unmarshal(msg.Value, &courier); err != nil {
+		log.Printf("Error unmarshaling Kafka message: %v", err)
+		return
+	}
+
+	if err := store.AssignCourier(ctx, orderID, courier.ID); err != nil {
+		log.Printf("Error assigning courier: %v", err)
+		return
+	}
+
+	log.Printf("Courier successfully assigned.")
+}
+
+func handleCourierSearchFailed(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handling 'courier.search.failed' event for order ID: %s", orderID)
+
+	if err := store.UpdateStatus(ctx, orderID, "no_couriers_available"); err != nil {
+		log.Printf("Error updating order status to 'no_available_couriers' for order %s: %v", orderID, err)
+		return
+	}
+
+	log.Printf("Order %s status updated to 'no_couriers_available.'", orderID)
 }

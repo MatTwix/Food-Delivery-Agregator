@@ -18,9 +18,13 @@ const (
 	RestaurantDeletedTopic Topic = "restaurant.deleted"
 
 	OrderCreatedTopic Topic = "order.created"
+	OrderPaidTopic    Topic = "order.paid"
 
 	PaymentSucceededTopic Topic = "payment.succeeded"
 	PaymentFailedTopic    Topic = "payment.failed"
+
+	CourierAssignedTopic     Topic = "courier.assigned"
+	CourierSearchFailedTopic Topic = "courier.search.failed"
 )
 
 var Topics = []Topic{
@@ -29,6 +33,13 @@ var Topics = []Topic{
 	RestaurantDeletedTopic,
 
 	OrderCreatedTopic,
+	OrderPaidTopic,
+
+	PaymentSucceededTopic,
+	PaymentFailedTopic,
+
+	CourierAssignedTopic,
+	CourierSearchFailedTopic,
 }
 
 func InitTopics() {

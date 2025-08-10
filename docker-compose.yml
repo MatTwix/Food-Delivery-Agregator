@@ -81,7 +81,7 @@ services:
 
   couriers-db: 
     image: postgres:14-alpine
-    container_name: postgres-db
+    container_name: couriers-db
     restart: always
     environment:
       - POSTGRES_USER=${DB_USER}
@@ -90,7 +90,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - couriers-service:/var/lib/postgresql/data
+      - couriers-postgres-data:/var/lib/postgresql/data
 
   couriers-service:
     build:
@@ -104,7 +104,7 @@ services:
     ports:
       - "3003:3003"
     environment:
-      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@orders-db:5432/couriers?sslmode=disable
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@couriers-db:5432/couriers?sslmode=disable
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
   api-gateway:
@@ -164,3 +164,4 @@ services:
 volumes:
   postgres-data:
   orders-postgres-data:
+  couriers-postgres-data:

@@ -43,7 +43,15 @@ func main() {
 		}
 	}()
 
-	r := api.SetupRoutes(db)
+	restaurantStore := store.NewRestaurantsStore(db)
+	menuItemStore := store.NewMenuItemStore(db)
+
+	kafkaProducer, err := messaging.NewProducer()
+	if err != nil {
+		log.Fatalf("Error creating Kafka producer: %v", err)
+	}
+
+	r := api.SetupRoutes(restaurantStore, menuItemStore, kafkaProducer)
 
 	log.Printf("Starting restaurants service on port %s", cfg.Port)
 

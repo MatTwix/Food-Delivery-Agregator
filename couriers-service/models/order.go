@@ -8,7 +8,6 @@ type Order struct {
 	UserID       string      `json:"user_id,omitempty"`
 	TotalPrice   float64     `json:"total_price"`
 	Status       string      `json:"status"`
-	CourierID    string      `json:"courier_id,omitempty"`
 	Items        []OrderItem `json:"items"`
 	CreatedAt    time.Time   `json:"created_at"`
 	UpdatedAt    time.Time   `json:"updated_at"`

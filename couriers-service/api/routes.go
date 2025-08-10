@@ -8,10 +8,9 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/store"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
+func SetupRoutes(couriersStore *store.CourierStore) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -21,7 +20,6 @@ func SetupRoutes(db *pgxpool.Pool) *chi.Mux {
 		fmt.Fprint(w, "Couriers service is up and running!")
 	})
 
-	couriersStore := store.NewCourierStore(db)
 	couriersHandler := handlers.NewCourierHandler(couriersStore)
 
 	r.Route("/couriers", func(r chi.Router) {

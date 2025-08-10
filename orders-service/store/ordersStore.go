@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
@@ -68,6 +69,25 @@ func (s *OrderStore) UpdateStatus(ctx context.Context, orderID string, status st
 
 	if result.RowsAffected() == 0 {
 		log.Printf("Warning: order with ID %s is not found for status update.", orderID)
+	}
+
+	return nil
+}
+
+func (s *OrderStore) AssignCourier(ctx context.Context, orderID, courierID string) error {
+	query := `
+		UPDATE orders
+		SET status = 'awaiting_pickup', courier_id = $1, updated_at = NOW()
+		WHERE id = $2
+	`
+
+	result, err := s.db.Exec(ctx, query, courierID, orderID)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("Error assigning courier: cannot found order with id: " + orderID)
 	}
 
 	return nil

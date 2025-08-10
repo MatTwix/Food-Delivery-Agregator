@@ -17,8 +17,8 @@ func CreateCouriersTable(db *pgxpool.Pool) {
 
 	var tableExists bool
 	err = tx.QueryRow(ctx,
-		"SELECT EXISTS (SELECT 1 FROM information.schema.tables WHERER table_name = 'couriers');").
-		Scan(tableExists)
+		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'couriers');").
+		Scan(&tableExists)
 
 	if err != nil {
 		log.Fatalf("Error checking couriers table existance: %v", err)
@@ -26,11 +26,15 @@ func CreateCouriersTable(db *pgxpool.Pool) {
 
 	if !tableExists {
 		_, err = tx.Exec(ctx, `
-			id UUID PRIMERY KEY DEFAULT gen_random_uuid(),
-			name VARCHAR(255) NOT NULL,
-			status VARCHAR(50) NOT NULL DEFAULT 'available',
-			created_at TIMESTAMPZ NOT NULL DEFAULT NOW()
-			updated_at TIMESTAMPZ NOT NULL DEFAULT NOW()
+			CREATE TABLE couriers (
+				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				name VARCHAR(255) NOT NULL,
+				status VARCHAR(50) NOT NULL DEFAULT 'available',
+				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+				updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+			);
+
+			CREATE INDEX IF NOT EXISTS idx_couriers_status ON couriers(status);
 		`)
 		if err != nil {
 			log.Fatalf("Error creating couriers table: %v", err)

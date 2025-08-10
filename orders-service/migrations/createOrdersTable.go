@@ -31,6 +31,7 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 				restaurant_id UUID NOT NULL,
 				user_id UUID,
 				total_price NUMERIC(10, 2) NOT NULL,
+				courier_id UUID,
 				status VARCHAR(50) NOT NULL,
 				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 				updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
