@@ -13,7 +13,8 @@ import (
 type Topic string
 
 const (
-	OrderPaidTopic Topic = "order.paid"
+	OrderPaidTopic      Topic = "order.paid"
+	OrderDeliveredTopic Topic = "order.delivered"
 
 	CourierAssignedTopic     Topic = "courier.assigned"
 	CourierSearchFailedTopic Topic = "courier.search.failed"
@@ -21,6 +22,7 @@ const (
 
 var Topics = []Topic{
 	OrderPaidTopic,
+	OrderDeliveredTopic,
 
 	CourierAssignedTopic,
 	CourierSearchFailedTopic,

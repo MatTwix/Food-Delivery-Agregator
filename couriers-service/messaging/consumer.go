@@ -17,15 +17,23 @@ type OrderPaidEvent struct {
 	ID string `json:"id"`
 }
 
+type OrderDeliveredEvent struct {
+	OrderID string `json:"order_id"`
+}
+
 const (
 	PaymentsGroupID = "couriers-service-group-payments"
 
 	CouriersGroupID = "couriers-service-group"
 )
 
-func StartConsumers(ctx context.Context, courierStore *store.CourierStore, p *Producer) {
+func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
 	go startTopicConsumer(ctx, OrderPaidTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleOrderPaid(ctx, msg, courierStore, p)
+	})
+
+	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+		handleOrderDelivered(ctx, msg, courierStore, deliveryStore)
 	})
 }
 
@@ -101,4 +109,31 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.Courie
 	}
 
 	log.Printf("Successfully assigned courier for order %s.", event.ID)
+}
+
+func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore) {
+	log.Println("Handling 'order.delivered event...")
+
+	var event OrderDeliveredEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		log.Printf("Error unmarshaling Kafka message: %v", err)
+		return
+	}
+
+	courierID, err := deliveryStore.GetCourierIDByOrderID(ctx, event.OrderID)
+	if err != nil {
+		log.Printf("Error getting courier id: %v", err)
+		return
+	}
+
+	//TODO: check if there is another deliveries by current courier
+
+	if err := courierStore.UpdateStatus(ctx, courierID, "available"); err != nil {
+		log.Printf("Error updating courier status to 'available': %v", err)
+		return
+	}
+
+	//TODO: publish event to courier.became_available topic (optionaly)
+
+	log.Printf("Courier %s became available.", courierID)
 }

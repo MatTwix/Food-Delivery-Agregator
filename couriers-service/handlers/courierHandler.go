@@ -3,9 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/store"
 	"github.com/go-chi/chi"
@@ -13,7 +15,8 @@ import (
 )
 
 type CourierHandler struct {
-	store *store.CourierStore
+	store    *store.CourierStore
+	producer *messaging.Producer
 }
 
 type CourierInputCreate struct {
@@ -21,13 +24,14 @@ type CourierInputCreate struct {
 }
 
 type CourierInputUpdate struct {
-	Name   string `json:"string" validate:"required"`
+	Name   string `json:"name" validate:"required"`
 	Status string `json:"status" validate:"required"`
 }
 
-func NewCourierHandler(s *store.CourierStore) *CourierHandler {
+func NewCourierHandler(s *store.CourierStore, p *messaging.Producer) *CourierHandler {
 	return &CourierHandler{
-		store: s,
+		store:    s,
+		producer: p,
 	}
 }
 
@@ -128,4 +132,24 @@ func (h *CourierHandler) DeleteCourier(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode("Courier deleted!")
+}
+
+func (h *CourierHandler) DeliverOrder(w http.ResponseWriter, r *http.Request) {
+	orderID := chi.URLParam(r, "orderID")
+	event := messaging.OrderDeliveredEvent{
+		OrderID: orderID,
+	}
+
+	eventBody, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Error marshaling message for Kafka event: %v", err)
+		http.Error(w, "Error marking order as delivered", http.StatusInternalServerError)
+		return
+	} else {
+		h.producer.Produce(r.Context(), messaging.OrderDeliveredTopic, []byte(orderID), eventBody)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Order successfully marked as delivered!")
 }

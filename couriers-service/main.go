@@ -25,6 +25,7 @@ func main() {
 	defer db.Close()
 
 	courierStore := store.NewCourierStore(db)
+	deliveryStore := store.NewDeliveryStore(db)
 
 	producer, err := messaging.NewProducer()
 	if err != nil {
@@ -32,9 +33,9 @@ func main() {
 	}
 	defer producer.Close()
 
-	messaging.StartConsumers(ctx, courierStore, producer)
+	messaging.StartConsumers(ctx, courierStore, deliveryStore, producer)
 
-	r := api.SetupRoutes(courierStore)
+	r := api.SetupRoutes(courierStore, producer)
 
 	log.Printf("Starting couriers service on port %s", cfg.Port)
 
