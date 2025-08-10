@@ -22,6 +22,8 @@ func main() {
 
 	config.InitValidator()
 
+	messaging.InitTopics()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

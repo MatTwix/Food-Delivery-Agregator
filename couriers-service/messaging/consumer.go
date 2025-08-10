@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/store"
 	"github.com/jackc/pgx/v5"
 	"github.com/segmentio/kafka-go"
@@ -33,7 +34,7 @@ const (
 
 func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
 	go startTopicConsumer(ctx, OrderPaidTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
-		handleOrderPaid(ctx, msg, courierStore, p)
+		handleOrderPaid(ctx, msg, courierStore, deliveryStore, p)
 	})
 
 	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
@@ -78,7 +79,7 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 	}()
 }
 
-func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.CourierStore, p *Producer) {
+func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
 	log.Println("Handling 'order.paid' event...")
 
 	var receivedEvent OrderPaidEvent
@@ -88,7 +89,7 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.Courie
 	}
 	log.Printf("Received message from topic %s: Key=%s, Value=%s", msg.Topic, string(msg.Key), string(msg.Value))
 
-	courier, err := store.GetAvailable(ctx)
+	courier, err := courierStore.GetAvailable(ctx)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			log.Printf("No available couriers for order %s. Publishing failure event.", receivedEvent.ID)
@@ -99,7 +100,17 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, store *store.Courie
 		return
 	}
 
-	if err := store.UpdateStatus(ctx, courier.ID, "busy"); err != nil {
+	delivery := models.Delivery{
+		CourierID: courier.ID,
+		OrderID:   receivedEvent.ID,
+	}
+
+	if err := deliveryStore.Create(ctx, &delivery); err != nil {
+		log.Printf("Error creating delivery: %v", err)
+		return
+	}
+
+	if err := courierStore.UpdateStatus(ctx, courier.ID, "busy"); err != nil {
 		log.Printf("Error updating courier status: %v", err)
 		return
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
@@ -25,9 +26,9 @@ type CourierAssignedEvent struct {
 }
 
 const (
-	RestaurantsGroupID = "orders-service-group-restaurants"
-	PaymentsGroupID    = "orders-service-group-payments"
-	CouriersGroupID    = "orders-service-group-couriers"
+	RestaurantsGroupID = "orders-service-restaurants-consumer-group"
+	PaymentsGroupID    = "orders-service-payments-consumer-group"
+	CouriersGroupID    = "orders-service-couriers-consumer-group"
 )
 
 //TODO: refactor some consumers: make order delivery status changing be provided by single consumer
@@ -76,35 +77,46 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 	brokers := strings.Split(cfg.KafkaBrokers, ",")
 
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  brokers,
-		GroupID:  groupID,
-		Topic:    string(topic),
-		MinBytes: 10e3,
-		MaxBytes: 10e6,
+		Brokers:        brokers,
+		GroupID:        groupID,
+		Topic:          string(topic),
+		MinBytes:       10e3,
+		MaxBytes:       10e6,
+		CommitInterval: 1 * time.Second,  // Auto-commit offsets every second
+		StartOffset:    kafka.LastOffset, // Start from the latest offset to avoid reprocessing old messages
 	})
 
-	log.Printf("Starting Kafka consumer for topic '%s'", topic)
+	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)
 
-	go func() {
-		defer r.Close()
+	defer r.Close()
 
-		for {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Printf("Stopping consumer for topic '%s' due to context cancellation", topic)
+			return
+		default:
 			m, err := r.ReadMessage(ctx)
 			if err != nil {
 				if ctx.Err() != nil {
-					break
+					log.Printf("Context cancelled, stopping consumer for topic '%s'", topic)
+					return
 				}
 				log.Printf("Error reading message from topic '%s': %v", topic, err)
 				continue
 			}
+			log.Printf("Processing message from topic '%s'", topic)
 			handler(ctx, m)
+
+			if err := r.CommitMessages(ctx, m); err != nil {
+				log.Printf("Error committing message offset: %v", err)
+			}
 		}
-		log.Printf("Stopping consumer for topic '%s'", topic)
-	}()
+	}
 }
 
 func handleRestaurantCreated(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
-	log.Printf("[Consumer ID: %p] Handling 'restaurant.created' event...", store)
+	log.Printf("Handling 'restaurant.created' event...")
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
@@ -142,7 +154,7 @@ func handleRestaurantUpdated(ctx context.Context, msg kafka.Message, store *stor
 }
 
 func handleRestaurantDeleted(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
-	log.Printf("Handling 'restaurant.created' event...")
+	log.Printf("Handling 'restaurant.deleted' event...")
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
