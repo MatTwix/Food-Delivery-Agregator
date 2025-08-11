@@ -33,7 +33,7 @@ func main() {
 
 	kafkaProducer, err := messaging.NewProducer()
 	if err != nil {
-		log.Fatalf("Error creating producer: %v", err)
+		log.Fatalf("Error creating Kafka producer: %v", err)
 	}
 
 	grpcClient := clients.NewResraurantServiceClient()

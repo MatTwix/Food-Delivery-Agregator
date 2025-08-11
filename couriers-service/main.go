@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
@@ -14,34 +17,55 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-
 	config.InitValidator()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	database.NewConnection()
 	db := database.DB
-	defer db.Close()
+
+	messaging.InitTopics()
 
 	courierStore := store.NewCourierStore(db)
 	deliveryStore := store.NewDeliveryStore(db)
 
-	producer, err := messaging.NewProducer()
+	kafkaProducer, err := messaging.NewProducer()
 	if err != nil {
-		log.Fatalf("Error creating producer: %v", err)
-	}
-	defer producer.Close()
-
-	messaging.StartConsumers(ctx, courierStore, deliveryStore, producer)
-
-	r := api.SetupRoutes(courierStore, producer)
-
-	log.Printf("Starting couriers service on port %s", cfg.Port)
-
-	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
-		log.Fatalf("Failed to start service: %v", err)
+		log.Fatalf("Error creating Kafka producer: %v", err)
 	}
 
-	//TODO: add gracefull shutdown
+	router := api.SetupRoutes(courierStore, kafkaProducer)
+	httpServer := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
+
+	messaging.StartConsumers(ctx, courierStore, deliveryStore, kafkaProducer)
+
+	go func() {
+		log.Printf("Starting couriers service on port %s", cfg.Port)
+
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.Fatalf("Failed to start service: %v", err)
+		}
+	}()
+
+	log.Println("Shutting down servers...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Error shutting down servers: %v", err)
+	}
+	log.Println("HTTP server stopped.")
+
+	kafkaProducer.Close()
+	log.Println("Kafka producer closed.")
+
+	database.DB.Close()
+	log.Println("Database connection closed.")
+
+	log.Println("Service gracefully stopped.")
 }
