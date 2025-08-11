@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -19,57 +18,58 @@ import (
 
 func main() {
 	cfg := config.LoadConfig()
-
 	config.InitValidator()
 
-	messaging.InitTopics()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	database.NewConnection()
 	db := database.DB
 
+	messaging.InitTopics()
+
 	restaurantStore := store.NewRestaurantStore(db)
 	orderStore := store.NewOrderStore(db)
 
-	producer, err := messaging.NewProducer()
+	kafkaProducer, err := messaging.NewProducer()
 	if err != nil {
 		log.Fatalf("Error creating producer: %v", err)
 	}
-	defer producer.Close()
+
 	grpcClient := clients.NewResraurantServiceClient()
 
-	messaging.StartConsumers(ctx, restaurantStore, orderStore, producer)
-
-	router := api.SetupRoutes(restaurantStore, orderStore, grpcClient, producer)
-
-	server := &http.Server{
+	router := api.SetupRoutes(restaurantStore, orderStore, grpcClient, kafkaProducer)
+	httpServer := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: router,
 	}
 
+	messaging.StartConsumers(ctx, restaurantStore, orderStore, kafkaProducer)
+
 	go func() {
 		log.Printf("Starting orders service on port %s", cfg.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-ctx.Done()
 
-	<-sigChan
-	log.Println("Received shutdown signal, gracefully shutting down...")
+	log.Println("Shutting down servers...")
 
-	cancel()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer shutdownCancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error during server shutdown: %v", err)
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Error shutting down servers: %v", err)
 	}
+	log.Println("HTTP server stopped.")
 
-	log.Println("Service shut down gracefully")
+	kafkaProducer.Close()
+	log.Println("Kafka producer closed.")
+
+	database.DB.Close()
+	log.Println("Database connection closed.")
+
+	log.Println("Service gracefully stopped.")
 }
