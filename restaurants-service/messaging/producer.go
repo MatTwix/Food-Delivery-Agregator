@@ -14,13 +14,11 @@ type Producer struct {
 }
 
 func NewProducer() (*Producer, error) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Broker == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Broker, ",")
 
 	w := &kafka.Writer{
 		Addr:         kafka.TCP(brokers...),

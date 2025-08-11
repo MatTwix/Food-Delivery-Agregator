@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	config.InitConfig()
 	config.InitValidator()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -43,17 +43,17 @@ func main() {
 
 	router := api.SetupRoutes(restaurantStore, menuItemStore, kafkaProducer)
 	httpServer := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
 	}
 
 	go func() {
-		lis, err := net.Listen("tcp", ":"+cfg.GrpcPort)
+		lis, err := net.Listen("tcp", ":"+config.Cfg.GRPC.Port)
 		if err != nil {
 			log.Fatalf("Error listening for gPRC: %v", err)
 		}
 
-		log.Printf("gRPC server listening on port: %v", cfg.GrpcPort)
+		log.Printf("gRPC server listening on port: %v", config.Cfg.GRPC.Port)
 
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("Error serving gRPC: %v", err)
@@ -61,7 +61,7 @@ func main() {
 	}()
 
 	go func() {
-		log.Printf("Starting restaurants service on port %s", cfg.Port)
+		log.Printf("Starting restaurants service on port %s", config.Cfg.HTTP.Port)
 
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start service: %v", err)

@@ -1,0 +1,12 @@
+http:
+  port: "3001"
+grpc:
+  port: "4040"
+db: 
+  source: ""
+kafka:
+  brokers: ""
+  topics:
+    restaurant_created: "restaurant.created"
+    restaurant_updated: "restaurant.updated"
+    restaurant_deleted: "restaurant.deleted"

@@ -25,11 +25,10 @@ var Topics = []Topic{
 }
 
 func InitTopics() {
-	cfg := config.LoadConfig()
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Broker == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Broker, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
 		log.Fatalf("Error dialing Kafka broker: %v", err)

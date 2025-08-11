@@ -1,29 +1,48 @@
 package config
 
-import "os"
+import (
+	"log"
+	"strings"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	Port     string
-	GrpcPort string
-
-	DbSource string
-
-	KafkaBrokers string
+	HTTP struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"http"`
+	GRPC struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
+	DB struct {
+		Source string `mapstructure:"source"`
+	} `mapstructure:"db"`
+	Kafka struct {
+		Broker string `mapstructure:"brokers"`
+		Topics struct {
+			RestaurantCreated string `mapstructure:"restaurant_created"`
+			RestaurantUpdated string `mapstructure:"restaurant_updated"`
+			RestaurantDeleted string `mapstructure:"restaurant_deleted"`
+		} `mapstructure:"topics"`
+	} `mapstructure:"kafka"`
 }
 
-func LoadConfig() Config {
-	port := os.Getenv("PORT")
+var Cfg Config
 
-	if port == "" {
-		port = "3001"
+func InitConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./restaurants-service")
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Printf("Warning: config file not found. Relying on environment variables.")
 	}
 
-	return Config{
-		Port:     port,
-		GrpcPort: os.Getenv("GRPC_SERVER"),
-
-		DbSource: os.Getenv("DB_SOURCE"),
-
-		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		log.Fatalf("Unable to decode config into struct: %v", err)
 	}
 }
