@@ -1,17 +1,24 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/api-gateway/config"
 )
 
 func main() {
 	cfg := config.LoadConfig()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	if cfg.RestaurantsServiceUrl == "" {
 		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
@@ -40,7 +47,8 @@ func main() {
 	oredersProxy := httputil.NewSingleHostReverseProxy(ordersServiceUrl)
 	couriersProxy := httputil.NewSingleHostReverseProxy(couriersServiceUrl)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		log.Printf("Incoming request for: %s", path)
 
@@ -68,10 +76,29 @@ func main() {
 		http.Error(w, "Not found", http.StatusNotFound)
 	})
 
-	log.Printf("Starting API Gateway on port %s", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	httpServer := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: mux,
 	}
 
-	//TODO: add gracefull shutdown
+	go func() {
+		log.Printf("Starting API Gateway on port %s", cfg.Port)
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Println("Shutting down servers...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Error shutting down servers: %v", err)
+	}
+	log.Println("HTTP server stopped.")
+
+	log.Println("Service gracefully stopped.")
 }
