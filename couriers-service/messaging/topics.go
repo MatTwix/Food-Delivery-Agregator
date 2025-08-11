@@ -14,6 +14,7 @@ type Topic string
 
 const (
 	OrderPaidTopic      Topic = "order.paid"
+	OrderPickedUpTopic  Topic = "order.picked_up"
 	OrderDeliveredTopic Topic = "order.delivered"
 
 	CourierAssignedTopic     Topic = "courier.assigned"

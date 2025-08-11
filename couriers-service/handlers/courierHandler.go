@@ -134,6 +134,26 @@ func (h *CourierHandler) DeleteCourier(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("Courier deleted!")
 }
 
+func (h *CourierHandler) PickUpOrder(w http.ResponseWriter, r *http.Request) {
+	orderID := chi.URLParam(r, "orderID")
+	event := messaging.OrderPickedUpEvent{
+		OrderID: orderID,
+	}
+
+	eventBody, err := json.Marshal(event)
+	if err != nil {
+		log.Printf("Error marshaling message for Kafka event: %v", err)
+		http.Error(w, "Error marking order as picked up", http.StatusInternalServerError)
+		return
+	} else {
+		h.producer.Produce(r.Context(), messaging.OrderPickedUpTopic, []byte(orderID), eventBody)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Order successfully marked as picked up!")
+}
+
 func (h *CourierHandler) DeliverOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderID")
 	event := messaging.OrderDeliveredEvent{

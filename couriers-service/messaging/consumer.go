@@ -19,6 +19,10 @@ type OrderPaidEvent struct {
 	ID string `json:"id"`
 }
 
+type OrderPickedUpEvent struct {
+	OrderID string `json:"order_id"`
+}
+
 type OrderDeliveredEvent struct {
 	OrderID string `json:"order_id"`
 }
@@ -143,7 +147,7 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore) {
-	log.Println("Handling 'order.delivered event...")
+	log.Println("Handling 'order.delivered' event...")
 
 	var event OrderDeliveredEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {

@@ -27,6 +27,7 @@ func SetupRoutes(couriersStore *store.CourierStore, producer *messaging.Producer
 		r.Get("/", couriersHandler.GetCouriers)
 		r.Get("/available", couriersHandler.GetAvailableCourier)
 		r.Post("/", couriersHandler.CreateCourier)
+		r.Post("/{orderID}/picked_up", couriersHandler.PickUpOrder)
 		r.Post("/{orderID}/delivered", couriersHandler.DeliverOrder)
 		r.Put("/{id}", couriersHandler.UpdateCourier)
 		r.Delete("/{id}", couriersHandler.DeleteCourier)

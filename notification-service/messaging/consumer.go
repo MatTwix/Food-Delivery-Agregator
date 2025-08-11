@@ -17,10 +17,8 @@ const (
 func StartConsumers(ctx context.Context) {
 	for _, topic := range Topics {
 		go startTopicConsumer(ctx, topic, GroupID, func(ctx context.Context, msg kafka.Message) {
-			handleNotificaion(ctx, msg)
+			handleNotificaion(msg)
 		})
-
-		//TODO: add order delivered event
 	}
 }
 
@@ -72,7 +70,7 @@ func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handle
 	}
 }
 
-func handleNotificaion(ctx context.Context, msg kafka.Message) {
+func handleNotificaion(msg kafka.Message) {
 	orderID := string(msg.Key)
 
 	var notificationMessage string
@@ -86,6 +84,10 @@ func handleNotificaion(ctx context.Context, msg kafka.Message) {
 		notificationMessage = "Payment was successfull."
 	case string(PaymentFailedTopic):
 		notificationMessage = "Payment failed."
+	case string(OrderPickedUpTopic):
+		notificationMessage = "Order picked up by courier."
+	case string(OrderDeliveredTopic):
+		notificationMessage = "Order delivered."
 	default:
 		notificationMessage = "An unknown event occured."
 	}

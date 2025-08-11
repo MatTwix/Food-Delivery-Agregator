@@ -62,6 +62,10 @@ func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore,
 		handleCourierSearchFailed(ctx, msg, orderStore)
 	})
 
+	go startTopicConsumer(ctx, OrderPickedUpTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+		handleOrderPickedUp(ctx, msg, orderStore)
+	})
+
 	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
 		handleOrderDelivered(ctx, msg, orderStore)
 	})
@@ -237,6 +241,18 @@ func handleCourierSearchFailed(ctx context.Context, msg kafka.Message, store *st
 	}
 
 	log.Printf("Order %s status updated to 'no_couriers_available.'", orderID)
+}
+
+func handleOrderPickedUp(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
+	orderID := string(msg.Key)
+	log.Printf("Handling 'order.picked_up' event for order ID: %s", orderID)
+
+	if err := store.UpdateStatus(ctx, orderID, "picked_up"); err != nil {
+		log.Printf("Error updating order status to 'picked_up' for order %s: %v", orderID, err)
+		return
+	}
+
+	log.Printf("Order %s status updated to 'picked_up'.", orderID)
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, store *store.OrderStore) {

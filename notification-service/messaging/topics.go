@@ -16,8 +16,10 @@ const (
 	PaymentSucceededTopic Topic = "payment.succeeded"
 	PaymentFailedTopic    Topic = "payment.failed"
 
-	OrderCreatedTopic Topic = "order.created"
-	OrderUpdatedTopic Topic = "order.updated"
+	OrderCreatedTopic   Topic = "order.created"
+	OrderUpdatedTopic   Topic = "order.updated"
+	OrderPickedUpTopic  Topic = "order.picked_up"
+	OrderDeliveredTopic Topic = "order.delivered"
 )
 
 var Topics = []Topic{
@@ -26,6 +28,8 @@ var Topics = []Topic{
 
 	OrderCreatedTopic,
 	OrderUpdatedTopic,
+	OrderPickedUpTopic,
+	OrderDeliveredTopic,
 }
 
 func InitTopics() {

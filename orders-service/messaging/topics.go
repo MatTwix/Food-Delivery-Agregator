@@ -19,6 +19,7 @@ const (
 
 	OrderCreatedTopic   Topic = "order.created"
 	OrderPaidTopic      Topic = "order.paid"
+	OrderPickedUpTopic  Topic = "order.picked_up"
 	OrderDeliveredTopic Topic = "order.delivered"
 
 	PaymentSucceededTopic Topic = "payment.succeeded"
