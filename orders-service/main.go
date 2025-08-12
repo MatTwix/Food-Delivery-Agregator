@@ -17,8 +17,10 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
+	config.InitConfig()
 	config.InitValidator()
+
+	messaging.InitTopicsNames()
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -40,14 +42,14 @@ func main() {
 
 	router := api.SetupRoutes(restaurantStore, orderStore, grpcClient, kafkaProducer)
 	httpServer := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
 	}
 
 	messaging.StartConsumers(ctx, restaurantStore, orderStore, kafkaProducer)
 
 	go func() {
-		log.Printf("Starting orders service on port %s", cfg.Port)
+		log.Printf("Starting orders service on port %s", config.Cfg.HTTP.Port)
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}

@@ -25,65 +25,57 @@ type CourierAssignedEvent struct {
 	CourierID string `json:"courier_id"`
 }
 
-const (
-	RestaurantsGroupID = "orders-service-restaurants-consumer-group"
-	PaymentsGroupID    = "orders-service-payments-consumer-group"
-	CouriersGroupID    = "orders-service-couriers-consumer-group"
-)
-
 //TODO: refactor some consumers: make order delivery status changing be provided by single consumer
 
 func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore, p *Producer) {
-	go startTopicConsumer(ctx, RestaurantCreatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, RestaurantCreatedTopic, config.Cfg.Kafka.GroupIDs.Restaurants, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantCreated(ctx, msg, restaurantStore)
 	})
 
-	go startTopicConsumer(ctx, RestaurantUpdatedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, RestaurantUpdatedTopic, config.Cfg.Kafka.GroupIDs.Restaurants, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantUpdated(ctx, msg, restaurantStore)
 	})
 
-	go startTopicConsumer(ctx, RestaurantDeletedTopic, RestaurantsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, RestaurantDeletedTopic, config.Cfg.Kafka.GroupIDs.Restaurants, func(ctx context.Context, msg kafka.Message) {
 		handleRestaurantDeleted(ctx, msg, restaurantStore)
 	})
 
-	go startTopicConsumer(ctx, PaymentSucceededTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, PaymentSucceededTopic, config.Cfg.Kafka.GroupIDs.Payments, func(ctx context.Context, msg kafka.Message) {
 		handlePaymentSucceeded(ctx, msg, orderStore, p)
 	})
 
-	go startTopicConsumer(ctx, PaymentFailedTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, PaymentFailedTopic, config.Cfg.Kafka.GroupIDs.Payments, func(ctx context.Context, msg kafka.Message) {
 		handlePaymentFailed(ctx, msg, orderStore)
 	})
 
-	go startTopicConsumer(ctx, CourierAssignedTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, CourierAssignedTopic, config.Cfg.Kafka.GroupIDs.Couriers, func(ctx context.Context, msg kafka.Message) {
 		handleCourierAssigned(ctx, msg, orderStore)
 	})
 
-	go startTopicConsumer(ctx, CourierSearchFailedTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, CourierSearchFailedTopic, config.Cfg.Kafka.GroupIDs.Couriers, func(ctx context.Context, msg kafka.Message) {
 		handleCourierSearchFailed(ctx, msg, orderStore)
 	})
 
-	go startTopicConsumer(ctx, OrderPickedUpTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, OrderPickedUpTopic, config.Cfg.Kafka.GroupIDs.Couriers, func(ctx context.Context, msg kafka.Message) {
 		handleOrderPickedUp(ctx, msg, orderStore)
 	})
 
-	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, OrderDeliveredTopic, config.Cfg.Kafka.GroupIDs.Couriers, func(ctx context.Context, msg kafka.Message) {
 		handleOrderDelivered(ctx, msg, orderStore)
 	})
 }
 
-func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        brokers,
 		GroupID:        groupID,
-		Topic:          string(topic),
+		Topic:          topic,
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
 		CommitInterval: 1 * time.Second,

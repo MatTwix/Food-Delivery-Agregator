@@ -10,8 +10,7 @@ import (
 )
 
 func NewResraurantServiceClient() pb.RestaurantServiceClient {
-	cfg := config.LoadConfig()
-	conn, err := grpc.NewClient("restaurants-service:"+cfg.GrpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("restaurants-service:"+config.Cfg.GRPC.Port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Error connecting to gRPC server: %v", err)
 	}

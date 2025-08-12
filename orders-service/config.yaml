@@ -1,0 +1,27 @@
+http:
+  port: "3002"
+grpc:
+  port: "4040"
+db: 
+  source: ""
+kafka:
+  brokers: ""
+  group_ids:
+    restaurants: "orders-service-restaurants-consumer-group"
+    payments: "orders-service-payments-consumer-group"
+    couriers: "orders-service-couriers-consumer-group"
+  topics:
+    restaurant_created: "restaurant.created"
+    restaurant_updated: "restaurant.updated"
+    restaurant_deleted: "restaurant.deleted"
+
+    order_created: "order.created"
+    order_paid: "order.paid"
+    order_picked_up: "order.picked_up"
+    order_delivered: "order.delivered"
+
+    payment_succeeded: "payment.succeeded"
+    payment_failed: "payment.failed"
+
+    courier_assigned: "courier.assigned"
+    courier_search_failed: "courier.search.failed"

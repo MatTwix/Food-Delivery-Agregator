@@ -12,13 +12,11 @@ import (
 var DB *pgxpool.Pool
 
 func NewConnection() {
-	cfg := config.LoadConfig()
-
-	if cfg.DbSource == "" {
+	if config.Cfg.DB.Source == "" {
 		log.Fatal("DB_SOURCE environment variable is not set")
 	}
 
-	pool, err := pgxpool.New(context.Background(), cfg.DbSource)
+	pool, err := pgxpool.New(context.Background(), config.Cfg.DB.Source)
 	if err != nil {
 		log.Fatalf("Error creating connection pool: %v", err)
 	}

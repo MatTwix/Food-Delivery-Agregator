@@ -10,32 +10,31 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type Topic string
+var (
+	RestaurantCreatedTopic string
+	RestaurantUpdatedTopic string
+	RestaurantDeletedTopic string
 
-const (
-	RestaurantCreatedTopic Topic = "restaurant.created"
-	RestaurantUpdatedTopic Topic = "restaurant.updated"
-	RestaurantDeletedTopic Topic = "restaurant.deleted"
+	OrderCreatedTopic   string
+	OrderPaidTopic      string
+	OrderPickedUpTopic  string
+	OrderDeliveredTopic string
 
-	OrderCreatedTopic   Topic = "order.created"
-	OrderPaidTopic      Topic = "order.paid"
-	OrderPickedUpTopic  Topic = "order.picked_up"
-	OrderDeliveredTopic Topic = "order.delivered"
+	PaymentSucceededTopic string
+	PaymentFailedTopic    string
 
-	PaymentSucceededTopic Topic = "payment.succeeded"
-	PaymentFailedTopic    Topic = "payment.failed"
-
-	CourierAssignedTopic     Topic = "courier.assigned"
-	CourierSearchFailedTopic Topic = "courier.search.failed"
+	CourierAssignedTopic     string
+	CourierSearchFailedTopic string
 )
 
-var Topics = []Topic{
+var Topics = []string{
 	RestaurantCreatedTopic,
 	RestaurantUpdatedTopic,
 	RestaurantDeletedTopic,
 
 	OrderCreatedTopic,
 	OrderPaidTopic,
+	OrderPickedUpTopic,
 	OrderDeliveredTopic,
 
 	PaymentSucceededTopic,
@@ -45,12 +44,22 @@ var Topics = []Topic{
 	CourierSearchFailedTopic,
 }
 
+func InitTopicsNames() {
+	RestaurantCreatedTopic = config.Cfg.Kafka.Topics.RestaurantCreated
+	RestaurantUpdatedTopic = config.Cfg.Kafka.Topics.RestaurantUpdated
+	RestaurantDeletedTopic = config.Cfg.Kafka.Topics.RestaurantDeleted
+
+	OrderCreatedTopic = config.Cfg.Kafka.Topics.OrderCreated
+	OrderPaidTopic = config.Cfg.Kafka.Topics.OrderPaid
+	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
+	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
+}
+
 func InitTopics() {
-	cfg := config.LoadConfig()
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
 		log.Fatalf("Error dialing Kafka broker: %v", err)

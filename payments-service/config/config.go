@@ -15,8 +15,8 @@ type Config struct {
 			PaymentFailed    string `mapstructure:"payment.failed"`
 			OrderCreated     string `mapstructure:"order.created"`
 			OrderUpdated     string `mapstructure:"order.updated"`
-		}
-	}
+		} `mapstructure:"topics"`
+	} `mapstructure:"kafka"`
 }
 
 var Cfg Config

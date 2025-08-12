@@ -37,7 +37,7 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        brokers,
 		GroupID:        groupID,
-		Topic:          string(topic),
+		Topic:          topic,
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
 		CommitInterval: 1 * time.Second,

@@ -1,29 +1,64 @@
 package config
 
-import "os"
+import (
+	"log"
+	"strings"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	Port     string
-	GrpcPort string
+	HTTP struct {
+		Port string `mapstucture:"port"`
+	} `mapstructure:"http"`
+	GRPC struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
+	DB struct {
+		Source string `mapstructure:"source"`
+	} `mapstructure:"db"`
+	Kafka struct {
+		Brokers  string `mapstructure:"brokers"`
+		GroupIDs struct {
+			Restaurants string `mapstructure:"restaurants"`
+			Payments    string `mapstructure:"payments"`
+			Couriers    string `mapstructure:"couriers"`
+		} `mapstructure:"group_ids"`
+		Topics struct {
+			RestaurantCreated string `mapstructure:"restaurant_created"`
+			RestaurantUpdated string `mapstructure:"restaurant_updated"`
+			RestaurantDeleted string `mapstructure:"restaurant_deleted"`
 
-	DbSource string
+			OrderCreated   string `mapstructure:"order_created"`
+			OrderPaid      string `mapstructure:"order_paid"`
+			OrderPickedUp  string `mapstructure:"order_picked_up"`
+			OrderDelivered string `mapstructure:"order_delivered"`
 
-	KafkaBrokers string
+			PaymentSucceeded string `mapstructure:"payment_succeeded"`
+			PaymentFailed    string `mapstructure:"payment_failed"`
+
+			CourierAssigned     string `mapstructure:"courier_assigned"`
+			CourierSearchFailed string `mapstructure:"courier_search_failed"`
+		} `mapstructure:"topics"`
+	} `mapstructure:"kafka"`
 }
 
-func LoadConfig() Config {
-	port := os.Getenv("PORT")
+var Cfg Config
 
-	if port == "" {
-		port = "3002"
+func InitConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./orders-service")
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Println("Warning: config file not found. Relying on environment variables.")
 	}
 
-	return Config{
-		Port:     port,
-		GrpcPort: os.Getenv("GRPC_SERVER"),
-
-		DbSource: os.Getenv("DB_SOURCE"),
-
-		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		log.Fatalf("Unable to devode config into struct %v", err)
 	}
 }

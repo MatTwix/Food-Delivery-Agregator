@@ -15,6 +15,7 @@ RUN go mod download
 
 COPY common/ ./common/
 COPY orders-service/ ./orders-service/
+COPY orders-service/config.yaml ./orders-service/config.yaml
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./orders-service
 
@@ -23,6 +24,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/orders-service/config.yaml ./orders-service/
 
 EXPOSE 3002
 
