@@ -11,10 +11,10 @@ type Config struct {
 	Kafka struct {
 		Brokers string `mapstructure:"brokers"`
 		Topics  struct {
-			PaymentSucceeded string `mapstructure:"payment.succeeded"`
-			PaymentFailed    string `mapstructure:"payment.failed"`
-			OrderCreated     string `mapstructure:"order.created"`
-			OrderUpdated     string `mapstructure:"order.updated"`
+			PaymentSucceeded string `mapstructure:"payment_succeeded"`
+			PaymentFailed    string `mapstructure:"payment_failed"`
+			OrderCreated     string `mapstructure:"order_created"`
+			OrderUpdated     string `mapstructure:"order_updated"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }
@@ -22,7 +22,7 @@ type Config struct {
 var Cfg Config
 
 func InitConfig() {
-	viper.SetConfigFile("config")
+	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./payments-service")
 

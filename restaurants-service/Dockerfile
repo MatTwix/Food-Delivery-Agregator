@@ -24,7 +24,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/restaurants-service/config.yaml ./restaurants-service/
+COPY --from=builder /app/restaurants-service/config.yaml ./restaurants-service/config.yaml
 
 EXPOSE 3001
 

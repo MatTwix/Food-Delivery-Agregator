@@ -53,6 +53,12 @@ func InitTopicsNames() {
 	OrderPaidTopic = config.Cfg.Kafka.Topics.OrderPaid
 	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
 	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
+
+	PaymentSucceededTopic = config.Cfg.Kafka.Topics.PaymentSucceeded
+	PaymentFailedTopic = config.Cfg.Kafka.Topics.PaymentFailed
+
+	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
+	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
 }
 
 func InitTopics() {

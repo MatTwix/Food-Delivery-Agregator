@@ -21,6 +21,6 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/payments-service/config.yaml ./payments-service
+COPY --from=builder /app/payments-service/config.yaml ./payments-service/config.yaml
 
 CMD ["/app/main"]
