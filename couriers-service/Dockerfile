@@ -15,6 +15,7 @@ RUN go mod download
 
 COPY common/ ./common/
 COPY couriers-service/ ./couriers-service/
+COPY couriers-service/config.yaml ./couriers-service/config.yaml
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./couriers-service/
 
@@ -23,6 +24,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/couriers-service/config.yaml ./couriers-service/
 
 EXPOSE 3003
 

@@ -31,35 +31,27 @@ type CourierAssignedEvent struct {
 	CourierID string `json:"courier_id"`
 }
 
-const (
-	PaymentsGroupID = "couriers-service-group-payments"
-
-	CouriersGroupID = "couriers-service-group"
-)
-
 func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
-	go startTopicConsumer(ctx, OrderPaidTopic, PaymentsGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, OrderPaidTopic, config.Cfg.Kafka.GroupIDs.Payments, func(ctx context.Context, msg kafka.Message) {
 		handleOrderPaid(ctx, msg, courierStore, deliveryStore, p)
 	})
 
-	go startTopicConsumer(ctx, OrderDeliveredTopic, CouriersGroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, OrderDeliveredTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
 		handleOrderDelivered(ctx, msg, courierStore, deliveryStore)
 	})
 }
 
-func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        brokers,
 		GroupID:        groupID,
-		Topic:          string(topic),
+		Topic:          topic,
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
 		CommitInterval: 1 * time.Second,

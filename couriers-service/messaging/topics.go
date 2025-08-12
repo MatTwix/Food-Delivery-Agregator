@@ -10,18 +10,16 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type Topic string
+var (
+	OrderPaidTopic      string
+	OrderPickedUpTopic  string
+	OrderDeliveredTopic string
 
-const (
-	OrderPaidTopic      Topic = "order.paid"
-	OrderPickedUpTopic  Topic = "order.picked_up"
-	OrderDeliveredTopic Topic = "order.delivered"
-
-	CourierAssignedTopic     Topic = "courier.assigned"
-	CourierSearchFailedTopic Topic = "courier.search.failed"
+	CourierAssignedTopic     string
+	CourierSearchFailedTopic string
 )
 
-var Topics = []Topic{
+var Topics = []string{
 	OrderPaidTopic,
 	OrderDeliveredTopic,
 
@@ -29,12 +27,19 @@ var Topics = []Topic{
 	CourierSearchFailedTopic,
 }
 
+func InitTopicsNames() {
+	OrderPaidTopic = config.Cfg.Kafka.Topics.OrderPaid
+	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
+
+	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
+	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
+}
+
 func InitTopics() {
-	cfg := config.LoadConfig()
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
 		log.Fatalf("Error dialing Kafka broker: %v", err)

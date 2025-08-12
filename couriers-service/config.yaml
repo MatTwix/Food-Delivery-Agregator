@@ -1,0 +1,16 @@
+http:
+  port: "3003"
+db:
+  source: ""
+kafka:
+  brokers: ""
+  group_ids:
+    payments: "couriers-service-group-payments"
+    orders: "couriers-service-group-orders"
+  topics:
+    order_paid: "order.paid"
+    order_picked_up: "order.picked_up"
+    order_delivered: "order.delivered"
+
+    courier_assigned: "courier.assigned"
+    courier_search_failed: "courier.search.failed"

@@ -14,13 +14,11 @@ type Producer struct {
 }
 
 func NewProducer() (*Producer, error) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 
 	w := &kafka.Writer{
 		Addr:         kafka.TCP(brokers...),
@@ -31,9 +29,9 @@ func NewProducer() (*Producer, error) {
 	return &Producer{writer: w}, nil
 }
 
-func (p *Producer) Produce(ctx context.Context, topic Topic, key, value []byte) error {
+func (p *Producer) Produce(ctx context.Context, topic string, key, value []byte) error {
 	err := p.writer.WriteMessages(ctx, kafka.Message{
-		Topic: string(topic),
+		Topic: topic,
 		Key:   key,
 		Value: value,
 	})

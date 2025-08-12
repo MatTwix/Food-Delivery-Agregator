@@ -1,27 +1,52 @@
 package config
 
-import "os"
+import (
+	"log"
+	"strings"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	Port string
+	HTTP struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"http"`
+	DB struct {
+		Source string `mapstructure:"source"`
+	} `mapstructure:"db"`
+	Kafka struct {
+		Brokers  string `mapstructure:"brokers"`
+		GroupIDs struct {
+			Payments string `mapstructure:"payments"`
+			Orders   string `mapstructure:"orders"`
+		} `mapstructure:"group_ids"`
+		Topics struct {
+			OrderPaid      string `mapstructure:"order_paid"`
+			OrderPickedUp  string `mapstructure:"order_picked_up"`
+			OrderDelivered string `mapstructure:"order_delivered"`
 
-	DbSource string
-
-	KafkaBrokers string
+			CourierAssigned     string `mapstructure:"coutier_assigned"`
+			CourierSearchFailed string `mapstructure:"coutier_search_failed"`
+		} `mapstructure:"topics"`
+	} `mapstructure:"kafka"`
 }
 
-func LoadConfig() Config {
-	port := os.Getenv("PORT")
+var Cfg Config
 
-	if port == "" {
-		port = "3003"
+func InitConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./couriers-service")
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Println("Warning: config file not found. Relying on environment variables.")
 	}
 
-	return Config{
-		Port: port,
-
-		DbSource: os.Getenv("DB_SOURCE"),
-
-		KafkaBrokers: os.Getenv("KAFKA_BROKERS"),
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		log.Fatalf("Unable to devode config into struct %v", err)
 	}
 }
