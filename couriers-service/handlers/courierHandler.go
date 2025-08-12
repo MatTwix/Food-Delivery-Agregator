@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
@@ -142,7 +142,7 @@ func (h *CourierHandler) PickUpOrder(w http.ResponseWriter, r *http.Request) {
 
 	eventBody, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("Error marshaling message for Kafka event: %v", err)
+		slog.Error("failed to marshal message for Kafka event", "error", err)
 		http.Error(w, "Error marking order as picked up", http.StatusInternalServerError)
 		return
 	} else {
@@ -162,7 +162,7 @@ func (h *CourierHandler) DeliverOrder(w http.ResponseWriter, r *http.Request) {
 
 	eventBody, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("Error marshaling message for Kafka event: %v", err)
+		slog.Error("failed to marshal message for Kafka event", "error", err)
 		http.Error(w, "Error marking order as delivered", http.StatusInternalServerError)
 		return
 	} else {

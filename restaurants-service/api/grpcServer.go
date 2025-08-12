@@ -2,7 +2,7 @@ package api
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/store"
@@ -18,11 +18,11 @@ func NewGrpcServer(s *store.MenuItemStore) *GrpcServer {
 }
 
 func (s *GrpcServer) GetMenuItems(ctx context.Context, req *pb.GetMenuItemsRequest) (*pb.GetMenuItemsResponse, error) {
-	log.Printf("Received gRPC request for menu items: %v", req.MenuItemIds)
+	slog.Info("received gRPC request", "menu_items", req.MenuItemIds)
 
 	items, err := s.menuItemStore.GetByIDs(ctx, req.MenuItemIds)
 	if err != nil {
-		log.Printf("Error getting menu items from store: %v", err)
+		slog.Error("failed to get menu items from store", "error", err)
 		return nil, err
 	}
 

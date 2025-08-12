@@ -2,7 +2,8 @@ package database
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/migrations"
@@ -13,20 +14,23 @@ var DB *pgxpool.Pool
 
 func NewConnection() {
 	if config.Cfg.DB.Source == "" {
-		log.Fatal("DB_SOURCE environment variable is not set")
+		slog.Error("DB_SOURCE environment variable is not set")
+		os.Exit(1)
 	}
 
 	pool, err := pgxpool.New(context.Background(), config.Cfg.DB.Source)
 	if err != nil {
-		log.Fatalf("Error creating connection pool: %v", err)
+		slog.Error("failed to create connection pool", "error", err)
+		os.Exit(1)
 	}
 
 	if err := pool.Ping(context.Background()); err != nil {
-		log.Fatalf("Error pinging database: %v", err)
+		slog.Error("failed to ping database", "error", err)
+		os.Exit(1)
 	}
 
 	DB = pool
-	log.Println("Successfully connected to the database")
+	slog.Info("successfully connected to the database")
 
 	migrations.Migrate(DB)
 }

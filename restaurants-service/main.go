@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -21,6 +22,7 @@ import (
 func main() {
 	config.InitConfig()
 	config.InitValidator()
+	config.InitLogger()
 
 	messaging.InitTopicsNames()
 
@@ -37,7 +39,8 @@ func main() {
 
 	kafkaProducer, err := messaging.NewProducer()
 	if err != nil {
-		log.Fatalf("Error creating Kafka producer: %v", err)
+		slog.Error("failed to create Kafka producer", "error", err)
+		os.Exit(1)
 	}
 
 	grpcServer := grpc.NewServer()
@@ -52,44 +55,47 @@ func main() {
 	go func() {
 		lis, err := net.Listen("tcp", ":"+config.Cfg.GRPC.Port)
 		if err != nil {
-			log.Fatalf("Error listening for gPRC: %v", err)
+			slog.Error("failed to listen for gPRC", "error", err)
+			os.Exit(1)
 		}
 
-		log.Printf("gRPC server listening on port: %v", config.Cfg.GRPC.Port)
+		slog.Info("gRPC server listening", "port", config.Cfg.GRPC.Port)
 
 		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("Error serving gRPC: %v", err)
+			slog.Error("failed to serve gRPC", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	go func() {
-		log.Printf("Starting restaurants service on port %s", config.Cfg.HTTP.Port)
+		slog.Info("starting restaurants service", "port", config.Cfg.HTTP.Port)
 
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start service: %v", err)
+			slog.Error("failed to start service", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	<-ctx.Done()
 
-	log.Println("Shutting down servers...")
+	slog.Info("shutting down servers")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	grpcServer.GracefulStop()
-	log.Println("gRPC server stopped.")
+	slog.Info("gRPC server stopped")
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error shutting down servers: %v", err)
+		slog.Error("failed to shut down servers", "error", err)
 	}
-	log.Println("HTTP server stopped.")
+	slog.Info("HTTP server stopped")
 
 	kafkaProducer.Close()
-	log.Println("Kafka producer closed.")
+	slog.Info("Kafka producer closed")
 
 	database.DB.Close()
-	log.Println("Database connection closed.")
+	slog.Info("database connection closed")
 
-	log.Println("Service gracefully stopped.")
+	slog.Info("service gracefully stopped")
 }

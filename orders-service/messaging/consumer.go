@@ -3,7 +3,8 @@ package messaging
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -67,7 +68,8 @@ func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore,
 
 func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
 	if config.Cfg.Kafka.Brokers == "" {
-		log.Fatal("KAFKA_BROKERS environment variable is not set")
+		slog.Error("KAFKA_BROKERS environment variable is not set")
+		os.Exit(1)
 	}
 
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
@@ -82,97 +84,97 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 		StartOffset:    kafka.LastOffset,
 	})
 
-	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)
+	slog.Info("Starting Kafka consumer", "topic", topic, "group_id", groupID)
 
 	defer r.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Stopping consumer for topic '%s' due to context cancellation", topic)
+			slog.Info("stopping consumer due to context cancellation", "topic", topic)
 			return
 		default:
 			m, err := r.ReadMessage(ctx)
 			if err != nil {
 				if ctx.Err() != nil {
-					log.Printf("Context cancelled, stopping consumer for topic '%s'", topic)
+					slog.Info("context cancelled, stopping consumer", "topic", topic)
 					return
 				}
-				log.Printf("Error reading message from topic '%s': %v", topic, err)
+				slog.Error("failed to read message", "topic", topic, "error", err)
 				continue
 			}
-			log.Printf("Processing message from topic '%s'", topic)
+			slog.Info("processing message", "topic", topic)
 			handler(ctx, m)
 
 			if err := r.CommitMessages(ctx, m); err != nil {
-				log.Printf("Error committing message offset: %v", err)
+				slog.Error("failed to commit message offset", "error", err)
 			}
 		}
 	}
 }
 
 func handleRestaurantCreated(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
-	log.Printf("Handling 'restaurant.created' event...")
+	slog.Info("handling event", "event", RestaurantCreatedTopic)
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
-		log.Printf("Error unmarshling Kafka message: %v", err)
+		slog.Error("failed to unmarshl Kafka message", "error", err)
 		return
 	}
-	log.Printf("Received message from topic %s: Key=%s, Value=%s", msg.Topic, string(msg.Key), string(msg.Value))
+	slog.Info("received message", "topic", msg.Topic, "key", string(msg.Key), "value", string(msg.Value))
 
 	if err := store.Upsert(ctx, &restaurant); err != nil {
-		log.Printf("Error upserting restaurant: %v", err)
+		slog.Error("failed to upsert restaurant", "error", err)
 		return
 	}
 
-	log.Printf("Successfully saved restaurant '%s' to the local database.", restaurant.Name)
+	slog.Info("successfully saved restaurant to the local database", "restaurant", restaurant.Name)
 }
 
 func handleRestaurantUpdated(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
 	//this handler copies previous one for remaining obility to modify the exact handler (send notifications on creating e.t.c)
 
-	log.Printf("Handling 'restaurant.updated' event...")
+	slog.Info("handling event", "event", RestaurantUpdatedTopic)
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
-		log.Printf("Error unmarshling Kafka message: %v", err)
+		slog.Error("failed to unmarshl Kafka message", "error", err)
 		return
 	}
-	log.Printf("Received message from topic %s: Key=%s, Value=%s", msg.Topic, string(msg.Key), string(msg.Value))
+	slog.Info("received message", "topic", msg.Topic, "key", string(msg.Key), "value", string(msg.Value))
 
 	if err := store.Upsert(ctx, &restaurant); err != nil {
-		log.Printf("Error upserting restaurant: %v", err)
+		slog.Error("failed to upsert restaurant", "error", err)
 		return
 	}
 
-	log.Printf("Successfully saved restaurant '%s' to the local database.", restaurant.Name)
+	slog.Info("successfully saved restaurant to the local database", "restaurant", restaurant.Name)
 }
 
 func handleRestaurantDeleted(ctx context.Context, msg kafka.Message, store *store.RestaurantStore) {
-	log.Printf("Handling 'restaurant.deleted' event...")
+	slog.Info("handling event", "topic", RestaurantDeletedTopic)
 
 	var restaurant models.Restaurant
 	if err := json.Unmarshal(msg.Value, &restaurant); err != nil {
-		log.Printf("Error unmarshling Kafka message: %v", err)
+		slog.Error("failed to unmarshl Kafka message", "error", err)
 		return
 	}
-	log.Printf("Received message from topic %s: Key=%s, Value=%s", msg.Topic, string(msg.Key), string(msg.Value))
+	slog.Info("received message", "topic", msg.Topic, "key", string(msg.Key), "value", string(msg.Value))
 
 	if err := store.Delete(ctx, restaurant.ID); err != nil {
-		log.Printf("Error deleting restaurant: %v", err)
+		slog.Error("failed to delete restaurant", "error", err)
 		return
 	}
 
-	log.Printf("Successfully deleted restaurant '%s' from the local database.", restaurant.ID)
+	slog.Info("successfully deleted restaurant from the local database", "restaurant_id", restaurant.ID)
 }
 
 func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store.OrderStore, p *Producer) {
 	orderID := string(msg.Key)
-	log.Printf("Handeling 'payment.succeeded' event for order ID: %s", orderID)
+	slog.Info("handeling event", "event", PaymentSucceededTopic, "order_id", orderID)
 
 	if err := store.UpdateStatus(ctx, orderID, "paid"); err != nil {
-		log.Printf("Error updating order status to 'paid' for order %s: %v", orderID, err)
+		slog.Error("failed to update order status to 'paid'", "order_id", orderID, "error", err)
 		return
 	}
 
@@ -182,79 +184,79 @@ func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store
 
 	eventBody, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("Error marshaling message for Kafka event: %v", err)
+		slog.Error("failed to marshal message for Kafka event", "error", err)
 		return
 	} else {
 		p.Produce(ctx, OrderPaidTopic, []byte(orderID), eventBody)
 	}
 
-	log.Printf("Order %s status updated to 'paid'.", orderID)
+	slog.Info("order status updated to 'paid'", "order_id", orderID)
 }
 
 func handlePaymentFailed(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
 	orderID := string(msg.Key)
-	log.Printf("Handeling 'payment.failed' event for order ID: %s", orderID)
+	slog.Info("handeling event", "topic", PaymentFailedTopic, "order_id", orderID)
 
 	if err := store.UpdateStatus(ctx, orderID, "payment_failed"); err != nil {
-		log.Printf("Error updating order status to 'payment_failed' for order %s: %v", orderID, err)
+		slog.Error("failed to update order status to 'payment_failed'", "order_id", orderID, "error", err)
 		return
 	}
 
-	log.Printf("Order %s status updated to 'payment_failed'.", orderID)
+	slog.Info("order status updated to 'payment_failed'", "order_id", orderID)
 
 	// Make event for refund or notifier
 }
 
 func handleCourierAssigned(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
 	orderID := string(msg.Key)
-	log.Printf("Handling 'courier.assigned' event for order ID: %s", orderID)
+	slog.Info("handling event", "event", CourierAssignedTopic, "order_id", orderID)
 
 	var event CourierAssignedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
-		log.Printf("Error unmarshaling Kafka message: %v", err)
+		slog.Error("failed to unmarshal Kafka message", "error", err)
 		return
 	}
 
 	if err := store.AssignCourier(ctx, orderID, event.CourierID); err != nil {
-		log.Printf("Error assigning courier: %v", err)
+		slog.Error("failed to assign courier", "error", err)
 		return
 	}
 
-	log.Printf("Courier successfully assigned.")
+	slog.Info("courier successfully assigned")
 }
 
 func handleCourierSearchFailed(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
 	orderID := string(msg.Key)
-	log.Printf("Handling 'courier.search.failed' event for order ID: %s", orderID)
+	slog.Info("handling event", "topic", CourierSearchFailedTopic, "order_id", orderID)
 
 	if err := store.UpdateStatus(ctx, orderID, "no_couriers_available"); err != nil {
-		log.Printf("Error updating order status to 'no_available_couriers' for order %s: %v", orderID, err)
+		slog.Error("failed to update order status to 'no_available_couriers'", "order_id", orderID, "error", err)
 		return
 	}
 
-	log.Printf("Order %s status updated to 'no_couriers_available.'", orderID)
+	slog.Info("order status updated to 'no_couriers_available'", "order_id", orderID)
 }
 
 func handleOrderPickedUp(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
 	orderID := string(msg.Key)
-	log.Printf("Handling 'order.picked_up' event for order ID: %s", orderID)
+	slog.Info("handling event", "topic", OrderPickedUpTopic, "order_id", orderID)
 
 	if err := store.UpdateStatus(ctx, orderID, "picked_up"); err != nil {
-		log.Printf("Error updating order status to 'picked_up' for order %s: %v", orderID, err)
+		slog.Error("failed to update order status to 'picked_up'", "order_id", orderID, "error", err)
 		return
 	}
 
-	log.Printf("Order %s status updated to 'picked_up'.", orderID)
+	slog.Info("order status updated to 'picked_up'", "order_id", orderID)
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, store *store.OrderStore) {
 	orderID := string(msg.Key)
-	log.Printf("Handling 'order.delivered' event for order id: %s", orderID)
+	slog.Info("handling event", "event", OrderDeliveredTopic, "order_id", orderID)
 
 	if err := store.UpdateStatus(ctx, orderID, "delivered"); err != nil {
-		log.Printf("Error updating order status to 'delivered': %v", err)
+		slog.Error("failed to update order status to 'delivered'", "error", err)
 		return
 	}
 
-	log.Printf("Order %s status updated to 'delivered'.", orderID)
+	slog.Info("order status updated to 'delivered'", "order_id", orderID)
 }

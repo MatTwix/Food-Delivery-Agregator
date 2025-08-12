@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -19,6 +20,7 @@ import (
 func main() {
 	config.InitConfig()
 	config.InitValidator()
+	config.InitLogger()
 
 	messaging.InitTopicsNames()
 
@@ -35,7 +37,8 @@ func main() {
 
 	kafkaProducer, err := messaging.NewProducer()
 	if err != nil {
-		log.Fatalf("Error creating Kafka producer: %v", err)
+		slog.Error("failed to create Kafka producer", "error", err)
+		os.Exit(1)
 	}
 
 	grpcClient := clients.NewResraurantServiceClient()
@@ -49,29 +52,30 @@ func main() {
 	messaging.StartConsumers(ctx, restaurantStore, orderStore, kafkaProducer)
 
 	go func() {
-		log.Printf("Starting orders service on port %s", config.Cfg.HTTP.Port)
+		slog.Info("starting orders service", "port", config.Cfg.HTTP.Port)
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+			slog.Error("failed to start server", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	<-ctx.Done()
 
-	log.Println("Shutting down servers...")
+	slog.Info("shutting down servers")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error shutting down servers: %v", err)
+		slog.Error("failed to shut down servers", "error", err)
 	}
-	log.Println("HTTP server stopped.")
+	slog.Info("HTTP server stopped")
 
 	kafkaProducer.Close()
-	log.Println("Kafka producer closed.")
 
+	slog.Info("Kafka producer closed")
 	database.DB.Close()
-	log.Println("Database connection closed.")
+	slog.Info("database connection closed")
 
-	log.Println("Service gracefully stopped.")
+	slog.Info("service gracefully stopped")
 }

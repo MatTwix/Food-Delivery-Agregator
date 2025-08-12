@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os/signal"
 	"syscall"
 
@@ -15,13 +15,15 @@ func main() {
 	defer stop()
 
 	config.InitConfig()
+	config.InitLogger()
+
 	messaging.InitTopicsNames()
 
 	messaging.InitTopics()
 
 	messaging.StartConsumers(ctx)
 
-	log.Println("Notificaion service started. Waiting for events...")
+	slog.Info("notificaion service started. Waiting for events...")
 	<-ctx.Done()
-	log.Printf("Notificaions service shutting down.")
+	slog.Info("notificaions service shutting down")
 }

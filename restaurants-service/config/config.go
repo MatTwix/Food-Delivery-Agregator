@@ -1,7 +1,8 @@
 package config
 
 import (
-	"log"
+	"log/slog"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -39,10 +40,11 @@ func InitConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Warning: config file not found. Relying on environment variables.")
+		slog.Warn("config file not found. Relying on environment variables")
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {
-		log.Fatalf("Unable to decode config into struct: %v", err)
+		slog.Error("unable to decode config into struct", "error", err)
+		os.Exit(1)
 	}
 }

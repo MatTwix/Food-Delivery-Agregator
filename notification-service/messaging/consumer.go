@@ -2,7 +2,9 @@ package messaging
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -20,7 +22,8 @@ func StartConsumers(ctx context.Context) {
 
 func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
 	if config.Cfg.Kafka.Brokers == "" {
-		log.Fatal("KAFKA_BROKERS environment variable is not set")
+		slog.Error("KAFKA_BROKERS environment variable is not set")
+		os.Exit(1)
 	}
 
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
@@ -35,30 +38,30 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 		StartOffset:    kafka.LastOffset,
 	})
 
-	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)
+	slog.Info("starting Kafka consumer", "topic", topic, "group_id", groupID)
 
 	defer r.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Stopping consumer for topic '%s' due to context cancellation", topic)
+			slog.Info("stopping consumer due to context cancellation", "topic", topic)
 			return
 		default:
 			m, err := r.ReadMessage(ctx)
 			if err != nil {
 				if ctx.Err() != nil {
-					log.Printf("Context cancelled, stopping consumer for topic '%s'", topic)
+					slog.Info("context cancelled, stopping consumer", "topic", topic)
 					return
 				}
-				log.Printf("Error reading message from topic '%s': %v", topic, err)
+				slog.Error("failed to read message", "topic", topic, "error", err)
 				continue
 			}
-			log.Printf("Processing message from topic '%s'", topic)
+			slog.Info("processing message", "topic", topic)
 			handler(ctx, m)
 
 			if err := r.CommitMessages(ctx, m); err != nil {
-				log.Printf("Error committing message offset: %v", err)
+				slog.Error("failed to commit message offset", "error", err)
 			}
 		}
 	}
@@ -86,5 +89,5 @@ func handleNotificaion(msg kafka.Message) {
 		notificationMessage = "An unknown event occured."
 	}
 
-	log.Printf("[NOTIFICATION] For Order ID: %s -> %s", orderID, notificationMessage)
+	slog.Debug(fmt.Sprintf("[NOTIFICATION] For Order ID: %s -> %s", orderID, notificationMessage))
 }

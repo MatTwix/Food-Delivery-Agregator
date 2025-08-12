@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -19,28 +20,35 @@ func main() {
 	defer stop()
 
 	config.InitConfig()
+	config.InitLogger()
 
 	if config.Cfg.URLs.RestaurantsService == "" {
-		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
+		slog.Error("RESTAURANTS_SERVICE_URL is not set")
+		os.Exit(1)
 	}
 	if config.Cfg.URLs.OrdersService == "" {
-		log.Fatal("ORDERS_SERVICE_URL is not set")
+		slog.Error("ORDERS_SERVICE_URL is not set")
+		os.Exit(1)
 	}
 	if config.Cfg.URLs.CouriersService == "" {
-		log.Fatal("COURIERS_SERVICE_URL is not set")
+		slog.Error("COURIERS_SERVICE_URL is not set")
+		os.Exit(1)
 	}
 
 	restaurantsServiceUrl, err := url.Parse(config.Cfg.URLs.RestaurantsService)
 	if err != nil {
-		log.Fatalf("Error parsing RESTAURANTS_SERVICE_URL: %v", err)
+		slog.Error("failed to parse RESTAURANTS_SERVICE_URL", "error", err)
+		os.Exit(1)
 	}
 	ordersServiceUrl, err := url.Parse(config.Cfg.URLs.OrdersService)
 	if err != nil {
-		log.Fatalf("Error parsing ORDERS_SERVICE_URL: %v", err)
+		slog.Error("failed to parse ORDERS_SERVICE_URL", "error", err)
+		os.Exit(1)
 	}
 	couriersServiceUrl, err := url.Parse(config.Cfg.URLs.CouriersService)
 	if err != nil {
-		log.Fatalf("Error parsing COURIERS_SERVICE_URL: %v", err)
+		slog.Error("failed to parse COURIERS_SERVICE_URL", "error", err)
+		os.Exit(1)
 	}
 
 	restaurantsProxy := httputil.NewSingleHostReverseProxy(restaurantsServiceUrl)
@@ -50,25 +58,25 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
-		log.Printf("Incoming request for: %s", path)
+		slog.Info("incoming request", "path", path)
 
 		if after, ok := strings.CutPrefix(path, "/api/restaurants"); ok {
 			r.URL.Path = after
-			log.Printf("Forwarding to restaurants-service with path: %s", r.URL.Path)
+			slog.Info("forwarding to restaurants-service", "path", r.URL.Path)
 			restaurantsProxy.ServeHTTP(w, r)
 			return
 		}
 
 		if after, ok := strings.CutPrefix(path, "/api/orders"); ok {
 			r.URL.Path = after
-			log.Printf("Forwarding to orders-service with path: %s", r.URL.Path)
+			slog.Info("forwarding to orders-service", "path", r.URL.Path)
 			oredersProxy.ServeHTTP(w, r)
 			return
 		}
 
 		if after, ok := strings.CutPrefix(path, "/api/couriers"); ok {
 			r.URL.Path = after
-			log.Printf("Forwarding to couriers-service with path: %s", r.URL.Path)
+			slog.Info("forwarding to couriers-service", "path", r.URL.Path)
 			couriersProxy.ServeHTTP(w, r)
 			return
 		}
@@ -82,23 +90,24 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Starting API Gateway on port %s", config.Cfg.HTTP.Port)
+		slog.Info("starting API Gateway", "port", config.Cfg.HTTP.Port)
 		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
+			slog.Error("failed to start server", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	<-ctx.Done()
 
-	log.Println("Shutting down servers...")
+	slog.Info("shutting down servers...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("Error shutting down servers: %v", err)
+		slog.Error("error shutting down servers", "error", err)
 	}
-	log.Println("HTTP server stopped.")
+	slog.Info("HTTP server stopped.")
 
-	log.Println("Service gracefully stopped.")
+	slog.Info("service gracefully stopped.")
 }

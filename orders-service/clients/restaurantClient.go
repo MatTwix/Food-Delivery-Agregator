@@ -1,7 +1,8 @@
 package clients
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
@@ -12,9 +13,10 @@ import (
 func NewResraurantServiceClient() pb.RestaurantServiceClient {
 	conn, err := grpc.NewClient("restaurants-service:"+config.Cfg.GRPC.Port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("Error connecting to gRPC server: %v", err)
+		slog.Error("failed to connect to gRPC server", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Successfully connected to restaurants-service gRPC server")
+	slog.Info("successfully connected to restaurants-service gRPC server")
 	return pb.NewRestaurantServiceClient(conn)
 }

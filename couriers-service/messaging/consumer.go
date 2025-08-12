@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -43,7 +44,8 @@ func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliv
 
 func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
 	if config.Cfg.Kafka.Brokers == "" {
-		log.Fatal("KAFKA_BROKERS environment variable is not set")
+		slog.Error("KAFKA_BROKERS environment variable is not set")
+		os.Exit(1)
 	}
 
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
@@ -58,52 +60,52 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 		StartOffset:    kafka.LastOffset,
 	})
 
-	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)
+	slog.Info("starting Kafka consumer", "topic", topic, "group_id", groupID)
 
 	defer r.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Stopping consumer for topic '%s' due to context cancellation", topic)
+			slog.Info("stopping consumer for due to context cancellation", "topic", topic)
 			return
 		default:
 			m, err := r.ReadMessage(ctx)
 			if err != nil {
 				if ctx.Err() != nil {
-					log.Printf("Context cancelled, stopping consumer for topic '%s'", topic)
+					slog.Info("context cancelled, stopping consumer", "topic", topic)
 					return
 				}
-				log.Printf("Error reading message from topic '%s': %v", topic, err)
+				slog.Error("failed to read message", "topic", topic, "error", err)
 				continue
 			}
-			log.Printf("Processing message from topic '%s'", topic)
+			slog.Info("processing message", "topic", topic)
 			handler(ctx, m)
 
 			if err := r.CommitMessages(ctx, m); err != nil {
-				log.Printf("Error committing message offset: %v", err)
+				slog.Error("failed to commit message offset", "error", err)
 			}
 		}
 	}
 }
 
 func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
-	log.Println("Handling 'order.paid' event...")
+	slog.Info("handling event", "event", OrderPaidTopic)
 
 	var receivedEvent OrderPaidEvent
 	if err := json.Unmarshal(msg.Value, &receivedEvent); err != nil {
-		log.Printf("Error unmarshaling Kafka message: %v", err)
+		slog.Error("failed to unmarshal Kafka message", "error", err)
 		return
 	}
-	log.Printf("Received message from topic %s: Key=%s, Value=%s", msg.Topic, string(msg.Key), string(msg.Value))
+	slog.Info("received message", "topic", msg.Topic, "key", string(msg.Key), "value", string(msg.Value))
 
 	courier, err := courierStore.GetAvailable(ctx)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			log.Printf("No available couriers for order %s. Publishing failure event.", receivedEvent.ID)
+			slog.Info("no available couriers. Publishing failure event.", "order_id", receivedEvent.ID)
 			p.Produce(ctx, CourierSearchFailedTopic, []byte(receivedEvent.ID), msg.Value)
 		} else {
-			log.Printf("Error searching available courier: %v", err)
+			slog.Error("failed to search available courier", "error", err)
 		}
 		return
 	}
@@ -114,12 +116,12 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store
 	}
 
 	if err := deliveryStore.Create(ctx, &delivery); err != nil {
-		log.Printf("Error creating delivery: %v", err)
+		slog.Error("failed to create delivery", "error", err)
 		return
 	}
 
 	if err := courierStore.UpdateStatus(ctx, courier.ID, "busy"); err != nil {
-		log.Printf("Error updating courier status: %v", err)
+		slog.Error("failed to update courier status", "error", err)
 		return
 	}
 
@@ -129,38 +131,38 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store
 
 	eventBody, err := json.Marshal(sendingEvent)
 	if err != nil {
-		log.Printf("Error marshaling courier for Kafka event: %v", err)
+		slog.Error("failed to marshal courier for Kafka event", "error", err)
 		return
 	} else {
 		p.Produce(ctx, CourierAssignedTopic, []byte(receivedEvent.ID), eventBody)
 	}
 
-	log.Printf("Successfully assigned courier for order %s.", receivedEvent.ID)
+	slog.Info("successfully assigned courier", "order_id", receivedEvent.ID)
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore) {
-	log.Println("Handling 'order.delivered' event...")
+	slog.Info("handling event", "event", OrderDeliveredTopic)
 
 	var event OrderDeliveredEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
-		log.Printf("Error unmarshaling Kafka message: %v", err)
+		slog.Error("failed to unmarshal Kafka message", "error", err)
 		return
 	}
 
 	courierID, err := deliveryStore.GetCourierIDByOrderID(ctx, event.OrderID)
 	if err != nil {
-		log.Printf("Error getting courier id: %v", err)
+		slog.Error("failed to get courier id", "error", err)
 		return
 	}
 
 	//TODO: check if there is another deliveries by current courier
 
 	if err := courierStore.UpdateStatus(ctx, courierID, "available"); err != nil {
-		log.Printf("Error updating courier status to 'available': %v", err)
+		slog.Error("failed to update courier status to 'available'", "error", err)
 		return
 	}
 
 	//TODO: publish event to courier.became_available topic (optionaly)
 
-	log.Printf("Courier %s became available.", courierID)
+	slog.Info("courier became available", "courier_id", courierID)
 }

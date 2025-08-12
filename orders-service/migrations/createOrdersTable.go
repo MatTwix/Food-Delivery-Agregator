@@ -2,7 +2,8 @@ package migrations
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -11,7 +12,8 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
-		log.Fatalf("Error starting transaction: %v", err)
+		slog.Error("failed to start transaction", "error", err)
+		os.Exit(1)
 	}
 	defer tx.Rollback(ctx)
 
@@ -21,7 +23,8 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 		Scan(&tableExists)
 
 	if err != nil {
-		log.Fatalf("Error cheking orders table existance: %v", err)
+		slog.Error("failed to check orders table existance", "error", err)
+		os.Exit(1)
 	}
 
 	if !tableExists {
@@ -41,15 +44,17 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 			CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 		`)
 		if err != nil {
-			log.Fatalf("Error creating orders table: %v", err)
+			slog.Error("failed to create orders table", "error", err)
+			os.Exit(1)
 		}
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			log.Fatalf("Error commiting transaction: %v", err)
+			slog.Error("failed to commit transaction", "error", err)
+			os.Exit(1)
 		}
 
-		log.Println("Orders table created successfully!")
+		slog.Info("orders table created successfully")
 	} else {
 		tx.Rollback(ctx)
 	}

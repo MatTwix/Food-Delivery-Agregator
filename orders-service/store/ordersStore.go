@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
 	"github.com/jackc/pgx/v5"
@@ -164,7 +164,7 @@ func (s *OrderStore) UpdateStatus(ctx context.Context, orderID string, status st
 	}
 
 	if result.RowsAffected() == 0 {
-		log.Printf("Warning: order with ID %s is not found for status update.", orderID)
+		slog.Warn("order is not found for status update", "order_id", orderID)
 	}
 
 	return nil

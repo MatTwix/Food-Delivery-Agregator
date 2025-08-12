@@ -2,7 +2,8 @@ package migrations
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -11,7 +12,7 @@ func CreateDeliveriesTable(db *pgxpool.Pool) {
 	ctx := context.Background()
 	tx, err := db.Begin(ctx)
 	if err != nil {
-		log.Printf("Error starting transaction: %v", err)
+		slog.Error("failed to start transaction", "error", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -20,7 +21,8 @@ func CreateDeliveriesTable(db *pgxpool.Pool) {
 		"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'deliveries');").
 		Scan(&tableExists)
 	if err != nil {
-		log.Fatalf("Error checking deliveries table existance: %v", err)
+		slog.Error("failed to check deliveries table existance", "error", err)
+		os.Exit(1)
 	}
 
 	if !tableExists {
@@ -35,15 +37,17 @@ func CreateDeliveriesTable(db *pgxpool.Pool) {
 		`)
 
 		if err != nil {
-			log.Fatalf("Error creating deliveries table: %v", err)
+			slog.Error("failed to creat deliveries table", "error", err)
+			os.Exit(1)
 		}
 
 		err = tx.Commit(ctx)
 		if err != nil {
-			log.Fatalf("Error commiting transaction: %v", err)
+			slog.Error("failed to commit transaction", "error", err)
+			os.Exit(1)
 		}
 
-		log.Println("Deliveries table created successfully!")
+		slog.Info("deliveries table created successfully")
 	} else {
 		tx.Rollback(ctx)
 	}

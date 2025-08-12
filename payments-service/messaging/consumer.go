@@ -3,8 +3,9 @@ package messaging
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"math/rand/v2"
+	"os"
 	"strings"
 	"time"
 
@@ -25,7 +26,8 @@ func StartConsumers(ctx context.Context, p *Producer) {
 
 func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
 	if config.Cfg.Kafka.Brokers == "" {
-		log.Fatal("KAFKA_BROKERS environment variable is not set")
+		slog.Error("KAFKA_BROKERS environment variable is not set")
+		os.Exit(1)
 	}
 
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
@@ -40,30 +42,30 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 		StartOffset:    kafka.LastOffset,
 	})
 
-	log.Printf("Starting Kafka consumer for topic '%s' with group ID '%s'", topic, groupID)
+	slog.Info("starting Kafka consumer", "topic", topic, "group_id", groupID)
 
 	defer r.Close()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("Stopping consumer for topic '%s' due to context cancellation", topic)
+			slog.Info("stopping consumer due to context cancellation", "topic", topic)
 			return
 		default:
 			m, err := r.ReadMessage(ctx)
 			if err != nil {
 				if ctx.Err() != nil {
-					log.Printf("Context cancelled, stopping consumer for topic '%s'", topic)
+					slog.Info("context cancelled, stopping consumer", "topic", topic)
 					return
 				}
-				log.Printf("Error reading message from topic '%s': %v", topic, err)
+				slog.Error("failed to read message", "topic", topic, "error", err)
 				continue
 			}
-			log.Printf("Processing message from topic '%s'", topic)
+			slog.Info("processing message", "topic", topic)
 			handler(ctx, m)
 
 			if err := r.CommitMessages(ctx, m); err != nil {
-				log.Printf("Error committing message offset: %v", err)
+				slog.Error("failed to commit message offset", "error", err)
 			}
 		}
 	}
@@ -72,21 +74,21 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 func handleOrderCreated(ctx context.Context, msg kafka.Message, p *Producer) {
 	var event OrderCreatedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
-		log.Printf("Error unmarshaling order.created event: %v", err)
+		slog.Error("failed to unmarshal event", "event", OrderCreatedTopic, "error", err)
 		return
 	}
 
-	log.Printf("Processing payment for order %s with total price %.2f", event.ID, event.TotalPrice)
+	slog.Info("processing payment", "order_od", event.ID, "total_price", event.TotalPrice)
 
 	// imitating payment process
 
 	time.Sleep(5 * time.Second)
 
 	if rand.Float32() < 0.8 {
-		log.Printf("Payment for order %s SUCCEEDED", event.ID)
+		slog.Info("payment SUCCEEDED", "order_id", event.ID)
 		p.Produce(ctx, PaymentSucceededTopic, []byte(event.ID), msg.Value)
 	} else {
-		log.Printf("Payment for order %s FAILED", event.ID)
+		slog.Info("payment FAILED", "order_id", event.ID)
 		p.Produce(ctx, PaymentFailedTopic, []byte(event.ID), msg.Value)
 	}
 }

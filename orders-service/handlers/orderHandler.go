@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
@@ -42,7 +42,7 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	orders, err := h.store.GetAll(r.Context())
 	if err != nil {
 		http.Error(w, "Error getting orders", http.StatusInternalServerError)
-		log.Printf("Error getting orders: %v", err)
+		slog.Error("failed to get orders", "error", err)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 	order, err := h.store.GetByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
-		log.Printf("Error getting order by id: %v", err)
+		slog.Error("failed to get order by id", "error", err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	grpcRes, err := h.grpcClient.GetMenuItems(r.Context(), grpcReq)
 	if err != nil {
-		log.Printf("Error call to restaurants-service via gRPC: %v", err)
+		slog.Error("failed to call to restaurants-service via gRPC", "error", err)
 		http.Error(w, "Error getting menu items info", http.StatusInternalServerError)
 		return
 	}
@@ -128,14 +128,14 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	order.TotalPrice = totalPrice
 
 	if err := h.store.Create(r.Context(), order); err != nil {
-		log.Printf("Error creating order: %v", err)
+		slog.Error("failed to create order", "error", err)
 		http.Error(w, "Error creating order", http.StatusInternalServerError)
 		return
 	}
 
 	eventBody, err := json.Marshal(order)
 	if err != nil {
-		log.Printf("Error marshaling order for Kafka event: %v", err)
+		slog.Error("failed to marshal order for Kafka event", "error", err)
 	} else {
 		h.producer.Produce(r.Context(), messaging.OrderCreatedTopic, []byte(order.ID), eventBody)
 	}

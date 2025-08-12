@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -15,19 +16,22 @@ func main() {
 	defer stop()
 
 	config.InitConfig()
+	config.InitLogger()
+
 	messaging.InitTopicsNames()
 
 	messaging.InitTopics()
 
 	producer, err := messaging.NewProducer()
 	if err != nil {
-		log.Fatalf("Error creating producer: %v", err)
+		slog.Error("failed to create producer", "error", err)
+		os.Exit(1)
 	}
 	defer producer.Close()
 
 	messaging.StartConsumers(ctx, producer)
 
-	log.Println("Payments service started. Waiting for events...")
+	slog.Info("payments service started. Waiting for events...")
 	<-ctx.Done()
-	log.Println("Payments service shutting down.")
+	slog.Info("payments service shutting down")
 }

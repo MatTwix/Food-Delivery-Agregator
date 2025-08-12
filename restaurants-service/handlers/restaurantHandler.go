@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/config"
@@ -86,7 +86,7 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 
 	eventBody, err := json.Marshal(restaurant)
 	if err != nil {
-		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+		slog.Error("failed to marshal restaurant for Kafka event", "error", err)
 	} else {
 		h.producer.Produce(r.Context(), messaging.RestaurantCreatedTopic, []byte(restaurant.ID), eventBody)
 	}
@@ -125,7 +125,7 @@ func (h *RestaurantHandler) UpdateRestaurant(w http.ResponseWriter, r *http.Requ
 
 	eventBody, err := json.Marshal(restaurant)
 	if err != nil {
-		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+		slog.Error("failed to marshal restaurant for Kafka event", "error", err)
 	} else {
 		h.producer.Produce(r.Context(), messaging.RestaurantUpdatedTopic, []byte(restaurant.ID), eventBody)
 	}
@@ -149,7 +149,7 @@ func (h *RestaurantHandler) DeleteRestaurant(w http.ResponseWriter, r *http.Requ
 
 	eventBody, err := json.Marshal(message)
 	if err != nil {
-		log.Printf("Error marshaling restaurant for Kafka event: %v", err)
+		slog.Error("failed to marshal restaurant for Kafka event", "error", err)
 	} else {
 		h.producer.Produce(r.Context(), messaging.RestaurantDeletedTopic, []byte(message.ID), eventBody)
 	}

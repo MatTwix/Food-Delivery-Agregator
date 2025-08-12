@@ -2,7 +2,8 @@ package messaging
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 	"strings"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
@@ -15,7 +16,8 @@ type Producer struct {
 
 func NewProducer() (*Producer, error) {
 	if config.Cfg.Kafka.Brokers == "" {
-		log.Fatal("KAFKA_BROKERS environment variable is not set")
+		slog.Error("KAFKA_BROKERS environment variable is not set")
+		os.Exit(1)
 	}
 
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
@@ -36,17 +38,17 @@ func (p *Producer) Produce(ctx context.Context, topic string, key, value []byte)
 		Value: value,
 	})
 	if err != nil {
-		log.Printf("Failed to write message to Kafka topic %s: %v", topic, err)
+		slog.Error("failed to write message to Kafka topic", "topic", topic, "error", err)
 		return err
 	}
 
-	log.Printf("Message sent to topic %s", topic)
+	slog.Info("message sent to topic", "topic", topic)
 
 	return nil
 }
 
 func (p *Producer) Close() {
 	if err := p.writer.Close(); err != nil {
-		log.Printf("Error closing Kafka writer: %v", err)
+		slog.Error("failed to close Kafka writer", "error", err)
 	}
 }
