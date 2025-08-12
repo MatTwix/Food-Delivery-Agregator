@@ -24,7 +24,7 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/api-gateway/config.yaml ./api-gateway/
+COPY --from=builder /app/api-gateway/config.yaml ./api-gateway/config.yaml
 
 EXPOSE 3000
 

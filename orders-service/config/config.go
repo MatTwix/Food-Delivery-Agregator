@@ -48,7 +48,7 @@ var Cfg Config
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/config")
+	viper.AddConfigPath("./orders-service")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -59,6 +59,6 @@ func InitConfig() {
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {
-		log.Fatalf("Unable to devode config into struct %v", err)
+		log.Fatalf("Unable to decode config into struct %v", err)
 	}
 }

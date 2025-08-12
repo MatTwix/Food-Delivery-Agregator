@@ -37,7 +37,7 @@ func InitConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Warning: config file not found. Relying on environment variables.")
+		log.Println("Warning: config file not found. Relying on environment variables. Err: " + err.Error())
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {

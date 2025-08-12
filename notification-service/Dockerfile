@@ -21,6 +21,6 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/notification-service/config.yaml ./notification-service/
+COPY --from=builder /app/notification-service/config.yaml ./notification-service/config.yaml
 
 CMD ["/app/main"]
