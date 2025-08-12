@@ -17,12 +17,8 @@ type OrderCreatedEvent struct {
 	TotalPrice float64 `json:"total_price"`
 }
 
-const (
-	GroupID = "payments-service-group"
-)
-
 func StartConsumers(ctx context.Context, p *Producer) {
-	go startTopicConsumer(ctx, OrderCreatedTopic, GroupID, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, OrderCreatedTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
 		handleOrderCreated(ctx, msg, p)
 	})
 }

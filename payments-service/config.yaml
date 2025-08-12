@@ -1,5 +1,7 @@
 kafka:
   brokers: ""
+  group_ids: 
+    orders: "payments-service-group"
   topics:
     payment_succeeded: "payment.succeeded"
     payment_failed: "payment.failed"

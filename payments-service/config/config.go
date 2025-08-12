@@ -9,8 +9,11 @@ import (
 
 type Config struct {
 	Kafka struct {
-		Brokers string `mapstructure:"brokers"`
-		Topics  struct {
+		Brokers  string `mapstructure:"brokers"`
+		GroupIDs struct {
+			Orders string `mapstructure:"orders"`
+		} `mapstructure:"group_ids"`
+		Topics struct {
 			PaymentSucceeded string `mapstructure:"payment_succeeded"`
 			PaymentFailed    string `mapstructure:"payment_failed"`
 			OrderCreated     string `mapstructure:"order_created"`
