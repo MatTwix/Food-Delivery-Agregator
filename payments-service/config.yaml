@@ -1,0 +1,7 @@
+kakfa:
+  brokers: ""
+  topics:
+    payment_succeeded: "payment.succeeded"
+    payment_failed: "payment.failed"
+    order_created: "order.created"
+    order_updated: "order.updated"

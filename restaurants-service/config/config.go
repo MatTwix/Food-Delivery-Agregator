@@ -18,8 +18,8 @@ type Config struct {
 		Source string `mapstructure:"source"`
 	} `mapstructure:"db"`
 	Kafka struct {
-		Broker string `mapstructure:"brokers"`
-		Topics struct {
+		Brokers string `mapstructure:"brokers"`
+		Topics  struct {
 			RestaurantCreated string `mapstructure:"restaurant_created"`
 			RestaurantUpdated string `mapstructure:"restaurant_updated"`
 			RestaurantDeleted string `mapstructure:"restaurant_deleted"`

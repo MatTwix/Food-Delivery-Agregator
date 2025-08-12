@@ -27,14 +27,12 @@ func StartConsumers(ctx context.Context, p *Producer) {
 	})
 }
 
-func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        brokers,

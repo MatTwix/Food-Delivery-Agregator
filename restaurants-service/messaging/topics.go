@@ -29,10 +29,10 @@ func InitTopicsNames() {
 }
 
 func InitTopics() {
-	if config.Cfg.Kafka.Broker == "" {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
-	brokers := strings.Split(config.Cfg.Kafka.Broker, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
 		log.Fatalf("Error dialing Kafka broker: %v", err)
@@ -53,7 +53,7 @@ func InitTopics() {
 	topicConfigs := []kafka.TopicConfig{}
 	for _, topic := range Topics {
 		topicConfigs = append(topicConfigs, kafka.TopicConfig{
-			Topic:             string(topic),
+			Topic:             topic,
 			NumPartitions:     1,
 			ReplicationFactor: 1,
 		})

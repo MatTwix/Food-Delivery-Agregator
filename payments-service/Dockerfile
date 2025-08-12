@@ -12,6 +12,7 @@ RUN echo ")" >> go.work
 RUN go mod download
 
 COPY payments-service/ ./payments-service/
+COPY payments-service/config.yaml ./payments-service/config.yaml
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./payments-service/
 
@@ -20,5 +21,6 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/payments-service/config.yaml ./payments-service
 
 CMD ["/app/main"]

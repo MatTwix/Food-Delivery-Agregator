@@ -6,12 +6,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/messaging"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	config.InitConfig()
+	messaging.InitTopicsNames()
 
 	messaging.InitTopics()
 
