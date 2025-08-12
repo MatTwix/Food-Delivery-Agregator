@@ -21,7 +21,7 @@ type Config struct {
 			OrderUpdated   string `mapstructure:"order_updated"`
 			OrderPickedUp  string `mapstructure:"order_picked_up"`
 			OrderDelivered string `mapstructure:"order_delivered"`
-		}
+		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }
 
@@ -30,7 +30,7 @@ var Cfg Config
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./notificaion-service")
+	viper.AddConfigPath("./notification-service")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 

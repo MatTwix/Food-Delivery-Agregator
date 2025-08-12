@@ -25,8 +25,8 @@ type Config struct {
 			OrderPickedUp  string `mapstructure:"order_picked_up"`
 			OrderDelivered string `mapstructure:"order_delivered"`
 
-			CourierAssigned     string `mapstructure:"coutier_assigned"`
-			CourierSearchFailed string `mapstructure:"coutier_search_failed"`
+			CourierAssigned     string `mapstructure:"courier_assigned"`
+			CourierSearchFailed string `mapstructure:"courier_search_failed"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }

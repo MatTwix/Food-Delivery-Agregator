@@ -21,6 +21,7 @@ var (
 
 var Topics = []string{
 	OrderPaidTopic,
+	OrderPickedUpTopic,
 	OrderDeliveredTopic,
 
 	CourierAssignedTopic,
@@ -29,6 +30,7 @@ var Topics = []string{
 
 func InitTopicsNames() {
 	OrderPaidTopic = config.Cfg.Kafka.Topics.OrderPaid
+	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
 	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
 
 	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned

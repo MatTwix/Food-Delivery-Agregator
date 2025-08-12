@@ -17,6 +17,8 @@ func main() {
 	config.InitConfig()
 	messaging.InitTopicsNames()
 
+	messaging.InitTopics()
+
 	messaging.StartConsumers(ctx)
 
 	log.Println("Notificaion service started. Waiting for events...")

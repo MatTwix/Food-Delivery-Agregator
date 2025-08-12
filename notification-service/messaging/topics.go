@@ -40,6 +40,18 @@ func InitTopicsNames() {
 	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
 }
 
+func GetTopics() []string {
+	return []string{
+		PaymentSucceededTopic,
+		PaymentFailedTopic,
+
+		OrderCreatedTopic,
+		OrderUpdatedTopic,
+		OrderPickedUpTopic,
+		OrderDeliveredTopic,
+	}
+}
+
 func InitTopics() {
 	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")

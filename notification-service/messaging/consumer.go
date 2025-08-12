@@ -11,7 +11,7 @@ import (
 )
 
 func StartConsumers(ctx context.Context) {
-	for _, topic := range Topics {
+	for _, topic := range GetTopics() {
 		go startTopicConsumer(ctx, topic, config.Cfg.Kafka.GroupIDs.Notification, func(ctx context.Context, msg kafka.Message) {
 			handleNotificaion(msg)
 		})
