@@ -1,0 +1,12 @@
+kafka:
+  brokers: ""
+  group_ids:
+    notification: "notification-service-group"
+  topics:
+    payment_succeeded: "payment.succeeded"
+    payment_failed: "payment.failed"
+
+    order_created: "order.created"
+    order_updated: "order.paid"
+    order_picked_up: "order.picked_up"
+    order_delivered: "order.delivered"

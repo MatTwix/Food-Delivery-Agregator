@@ -10,19 +10,17 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type Topic string
+var (
+	PaymentSucceededTopic string
+	PaymentFailedTopic    string
 
-const (
-	PaymentSucceededTopic Topic = "payment.succeeded"
-	PaymentFailedTopic    Topic = "payment.failed"
-
-	OrderCreatedTopic   Topic = "order.created"
-	OrderUpdatedTopic   Topic = "order.updated"
-	OrderPickedUpTopic  Topic = "order.picked_up"
-	OrderDeliveredTopic Topic = "order.delivered"
+	OrderCreatedTopic   string
+	OrderUpdatedTopic   string
+	OrderPickedUpTopic  string
+	OrderDeliveredTopic string
 )
 
-var Topics = []Topic{
+var Topics = []string{
 	PaymentSucceededTopic,
 	PaymentFailedTopic,
 
@@ -32,12 +30,21 @@ var Topics = []Topic{
 	OrderDeliveredTopic,
 }
 
+func InitTopicsNames() {
+	PaymentSucceededTopic = config.Cfg.Kafka.Topics.PaymentSucceeded
+	PaymentFailedTopic = config.Cfg.Kafka.Topics.PaymentFailed
+
+	OrderCreatedTopic = config.Cfg.Kafka.Topics.OrderCreated
+	OrderUpdatedTopic = config.Cfg.Kafka.Topics.OrderUpdated
+	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
+	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
+}
+
 func InitTopics() {
-	cfg := config.LoadConfig()
-	if cfg.KafkaBrokers == "" {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
 		log.Fatalf("Error dialing Kafka broker: %v", err)
@@ -58,7 +65,7 @@ func InitTopics() {
 	topicConfigs := []kafka.TopicConfig{}
 	for _, topic := range Topics {
 		topicConfigs = append(topicConfigs, kafka.TopicConfig{
-			Topic:             string(topic),
+			Topic:             topic,
 			NumPartitions:     1,
 			ReplicationFactor: 1,
 		})

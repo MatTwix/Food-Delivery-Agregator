@@ -10,31 +10,25 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-const (
-	GroupID = "notification-service-group"
-)
-
 func StartConsumers(ctx context.Context) {
 	for _, topic := range Topics {
-		go startTopicConsumer(ctx, topic, GroupID, func(ctx context.Context, msg kafka.Message) {
+		go startTopicConsumer(ctx, topic, config.Cfg.Kafka.GroupIDs.Notification, func(ctx context.Context, msg kafka.Message) {
 			handleNotificaion(msg)
 		})
 	}
 }
 
-func startTopicConsumer(ctx context.Context, topic Topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
-	cfg := config.LoadConfig()
-
-	if cfg.KafkaBrokers == "" {
+func startTopicConsumer(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg kafka.Message)) {
+	if config.Cfg.Kafka.Brokers == "" {
 		log.Fatal("KAFKA_BROKERS environment variable is not set")
 	}
 
-	brokers := strings.Split(cfg.KafkaBrokers, ",")
+	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:        brokers,
 		GroupID:        groupID,
-		Topic:          string(topic),
+		Topic:          topic,
 		MinBytes:       10e3,
 		MaxBytes:       10e6,
 		CommitInterval: 1 * time.Second,
@@ -76,17 +70,17 @@ func handleNotificaion(msg kafka.Message) {
 	var notificationMessage string
 
 	switch msg.Topic {
-	case string(OrderCreatedTopic):
+	case OrderCreatedTopic:
 		notificationMessage = "Order has been created."
-	case string(OrderUpdatedTopic):
+	case OrderUpdatedTopic:
 		notificationMessage = "Order has been updated."
-	case string(PaymentSucceededTopic):
+	case PaymentSucceededTopic:
 		notificationMessage = "Payment was successfull."
-	case string(PaymentFailedTopic):
+	case PaymentFailedTopic:
 		notificationMessage = "Payment failed."
-	case string(OrderPickedUpTopic):
+	case OrderPickedUpTopic:
 		notificationMessage = "Order picked up by courier."
-	case string(OrderDeliveredTopic):
+	case OrderDeliveredTopic:
 		notificationMessage = "Order delivered."
 	default:
 		notificationMessage = "An unknown event occured."
