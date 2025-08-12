@@ -115,10 +115,6 @@ services:
       - "3000:3000"
     depends_on:
       - restaurants-service
-    environment:
-      - RESTAURANTS_SERVICE_URL=http://restaurants-service:3001
-      - ORDERS_SERVICE_URL=http://orders-service:3002
-      - COURIERS_SERVICE_URL=http://couriers-service:3003
     
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0

@@ -48,14 +48,14 @@ var Cfg Config
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./orders-service")
+	viper.AddConfigPath("/config")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		log.Println("Warning: config file not found. Relying on environment variables.")
+		log.Fatalf("Error reading config file: %v", err)
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {

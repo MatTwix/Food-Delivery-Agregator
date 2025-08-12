@@ -5,7 +5,7 @@ WORKDIR /app
 COPY common/go.mod common/go.sum ./common/
 COPY orders-service/go.mod orders-service/go.sum ./orders-service/
 
-RUN echo "go 1.24" >> go.work
+RUN echo "go 1.24" > go.work
 RUN echo "use (" >> go.work
 RUN echo "  ./common" >> go.work
 RUN echo "  ./orders-service" >> go.work
@@ -15,7 +15,6 @@ RUN go mod download
 
 COPY common/ ./common/
 COPY orders-service/ ./orders-service/
-COPY orders-service/config.yaml ./orders-service/config.yaml
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/main ./orders-service
 
@@ -24,7 +23,10 @@ FROM alpine:latest
 WORKDIR /app
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/orders-service/config.yaml ./orders-service/
+
+# Создаем директорию для конфига и копируем его туда
+RUN mkdir /config
+COPY orders-service/config.yaml /config/config.yaml
 
 EXPOSE 3002
 

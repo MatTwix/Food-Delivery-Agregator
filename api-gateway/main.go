@@ -15,30 +15,30 @@ import (
 )
 
 func main() {
-	cfg := config.LoadConfig()
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	if cfg.RestaurantsServiceUrl == "" {
+	config.InitConfig()
+
+	if config.Cfg.URLs.RestaurantsService == "" {
 		log.Fatal("RESTAURANTS_SERVICE_URL is not set")
 	}
-	if cfg.OrdersServiceUrl == "" {
+	if config.Cfg.URLs.OrdersService == "" {
 		log.Fatal("ORDERS_SERVICE_URL is not set")
 	}
-	if cfg.CouriersServiceUrl == "" {
+	if config.Cfg.URLs.CouriersService == "" {
 		log.Fatal("COURIERS_SERVICE_URL is not set")
 	}
 
-	restaurantsServiceUrl, err := url.Parse(cfg.RestaurantsServiceUrl)
+	restaurantsServiceUrl, err := url.Parse(config.Cfg.URLs.RestaurantsService)
 	if err != nil {
 		log.Fatalf("Error parsing RESTAURANTS_SERVICE_URL: %v", err)
 	}
-	ordersServiceUrl, err := url.Parse(cfg.OrdersServiceUrl)
+	ordersServiceUrl, err := url.Parse(config.Cfg.URLs.OrdersService)
 	if err != nil {
 		log.Fatalf("Error parsing ORDERS_SERVICE_URL: %v", err)
 	}
-	couriersServiceUrl, err := url.Parse(cfg.CouriersServiceUrl)
+	couriersServiceUrl, err := url.Parse(config.Cfg.URLs.CouriersService)
 	if err != nil {
 		log.Fatalf("Error parsing COURIERS_SERVICE_URL: %v", err)
 	}
@@ -77,12 +77,12 @@ func main() {
 	})
 
 	httpServer := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: mux,
 	}
 
 	go func() {
-		log.Printf("Starting API Gateway on port %s", cfg.Port)
+		log.Printf("Starting API Gateway on port %s", config.Cfg.HTTP.Port)
 		if err := httpServer.ListenAndServe(); err != nil {
 			log.Fatalf("Failed to start server: %v", err)
 		}

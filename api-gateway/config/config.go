@@ -1,27 +1,39 @@
 package config
 
-import "os"
+import (
+	"log"
+	"strings"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
-	Port string
-
-	RestaurantsServiceUrl string
-	OrdersServiceUrl      string
-	CouriersServiceUrl    string
+	HTTP struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"http"`
+	URLs struct {
+		RestaurantsService string `mapstructure:"restaurants_service"`
+		OrdersService      string `mapstructure:"orders_service"`
+		CouriersService    string `mapstructure:"couriers_service"`
+	} `mapstructure:"urls"`
 }
 
-func LoadConfig() Config {
-	port := os.Getenv("PORT")
+var Cfg Config
 
-	if port == "" {
-		port = "3000"
+func InitConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./api-gateway")
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Println("Warning: config file not found. Relying on environment variables.")
 	}
 
-	return Config{
-		Port: port,
-
-		RestaurantsServiceUrl: os.Getenv("RESTAURANTS_SERVICE_URL"),
-		OrdersServiceUrl:      os.Getenv("ORDERS_SERVICE_URL"),
-		CouriersServiceUrl:    os.Getenv("COURIERS_SERVICE_URL"),
+	if err := viper.Unmarshal(&Cfg); err != nil {
+		log.Fatalf("Unable to devode config into struct %v", err)
 	}
 }
