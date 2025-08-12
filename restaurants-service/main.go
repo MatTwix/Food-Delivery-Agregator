@@ -22,6 +22,8 @@ func main() {
 	config.InitConfig()
 	config.InitValidator()
 
+	messaging.InitTopicsNames()
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

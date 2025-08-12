@@ -51,6 +51,8 @@ func main() {
 		}
 	}()
 
+	<-ctx.Done()
+
 	log.Println("Shutting down servers...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

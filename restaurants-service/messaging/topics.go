@@ -10,18 +10,22 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type Topic string
-
-const (
-	RestaurantCreatedTopic Topic = "restaurant.created"
-	RestaurantUpdatedTopic Topic = "restaurant.updated"
-	RestaurantDeletedTopic Topic = "restaurant.deleted"
+var (
+	RestaurantCreatedTopic string
+	RestaurantUpdatedTopic string
+	RestaurantDeletedTopic string
 )
 
-var Topics = []Topic{
+var Topics = []string{
 	RestaurantCreatedTopic,
 	RestaurantUpdatedTopic,
 	RestaurantDeletedTopic,
+}
+
+func InitTopicsNames() {
+	RestaurantCreatedTopic = config.Cfg.Kafka.Topics.RestaurantCreated
+	RestaurantUpdatedTopic = config.Cfg.Kafka.Topics.RestaurantUpdated
+	RestaurantDeletedTopic = config.Cfg.Kafka.Topics.RestaurantDeleted
 }
 
 func InitTopics() {

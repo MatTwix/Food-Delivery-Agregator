@@ -29,7 +29,7 @@ func NewProducer() (*Producer, error) {
 	return &Producer{writer: w}, nil
 }
 
-func (p *Producer) Produce(ctx context.Context, topic Topic, key, value []byte) error {
+func (p *Producer) Produce(ctx context.Context, topic string, key, value []byte) error {
 	err := p.writer.WriteMessages(ctx, kafka.Message{
 		Topic: string(topic),
 		Key:   key,
