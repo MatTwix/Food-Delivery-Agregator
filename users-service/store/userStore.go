@@ -17,6 +17,51 @@ func NewUserStore(db *pgxpool.Pool) *UserStore {
 	}
 }
 
+func (s *UserStore) GetAll(ctx context.Context) ([]models.User, error) {
+	query := `
+		SELECT id, email, password_hash, role, created_at, updated_at
+		FROM users
+	`
+
+	var users []models.User
+	rows, err := s.db.Query(ctx, query)
+	if err != nil {
+		return users, err
+	}
+
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.PasswordHash,
+			&user.Role,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+		); err != nil {
+			return users, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (s *UserStore) GetByEmail(ctx context.Context, email string) (models.User, error) {
+	query := `
+		SELECT id, email, password_hash, role, created_at, updated_at
+		FROM users
+		WHERE email = $1
+	`
+
+	var user models.User
+	err := s.db.QueryRow(ctx, query, email).
+		Scan(&user.ID, &user.Email, &user.PasswordHash, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+
+	return user, err
+}
+
 func (s *UserStore) Create(ctx context.Context, user *models.User) error {
 	query := `
 		INSERT INTO users 

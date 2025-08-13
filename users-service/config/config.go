@@ -22,6 +22,9 @@ type Config struct {
 		Topics struct {
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
+	JWT struct {
+		Secret string `mapstructure:"secret"`
+	} `mapstructure:"jwt"`
 }
 
 var Cfg Config

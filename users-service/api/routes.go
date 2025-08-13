@@ -22,7 +22,9 @@ func SetupRoutes(userStore *store.UserStore) *chi.Mux {
 	userHandler := handlers.NewUserHandler(userStore)
 
 	r.Route("/users", func(r chi.Router) {
+		r.Get("/", userHandler.GetAllUses)
 		r.Post("/register", userHandler.Register)
+		r.Post("/login", userHandler.Login)
 	})
 
 	return r

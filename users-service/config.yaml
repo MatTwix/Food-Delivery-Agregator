@@ -6,3 +6,5 @@ kafka:
   brokers: ""
   group_ids:
   topics:
+jwt:
+  secret: ""

@@ -20,6 +20,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
