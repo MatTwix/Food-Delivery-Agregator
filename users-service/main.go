@@ -12,6 +12,7 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/database"
+	"github.com/MatTwix/Food-Delivery-Agregator/users-service/store"
 )
 
 func main() {
@@ -23,9 +24,11 @@ func main() {
 	defer stop()
 
 	database.NewConnection()
-	// db := database.DB
+	db := database.DB
 
-	router := api.SetupRoutes()
+	userStore := store.NewUserStore(db)
+
+	router := api.SetupRoutes(userStore)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
