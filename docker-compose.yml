@@ -105,6 +105,34 @@ services:
       - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@couriers-db:5432/couriers?sslmode=disable
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
+  users-db:
+    image: postgres:14-alpine
+    container_name: users-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=users
+    ports:
+      - "5435:5432"
+    volumes:
+      - users-postgres-data:/var/lib/postgresql/data
+
+  users-service:
+    build:
+      context: .
+      dockerfile: ./users-service/Dockerfile
+    container_name: users-service
+    restart: on-failure
+    depends_on:
+      - users-db
+      - kafka
+    ports:
+      - "3004:3004"
+    environment:
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@users-db:5432/users?sslmode=disable
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
   api-gateway:
     build:
       context: .
@@ -159,3 +187,4 @@ volumes:
   postgres-data:
   orders-postgres-data:
   couriers-postgres-data:
+  users-postgres-data:

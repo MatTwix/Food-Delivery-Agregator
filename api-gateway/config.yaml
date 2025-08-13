@@ -4,3 +4,4 @@ urls:
   restaurants_service: "http://restaurants-service:3001"
   orders_service: "http://orders-service:3002"
   couriers_service: "http://couriers-service:3003"
+  users_service: "http://users-service:3004"

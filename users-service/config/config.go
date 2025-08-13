@@ -11,13 +11,17 @@ import (
 type Config struct {
 	HTTP struct {
 		Port string `mapstructure:"port"`
-	} `mapstructure:"http"`
-	URLs struct {
-		RestaurantsService string `mapstructure:"restaurants_service"`
-		OrdersService      string `mapstructure:"orders_service"`
-		CouriersService    string `mapstructure:"couriers_service"`
-		UsersService       string `mapstructure:"users_service"`
-	} `mapstructure:"urls"`
+	} `mapstructure:"HTTP"`
+	DB struct {
+		Source string `mapstructure:"source"`
+	} `mapstructure:"db"`
+	Kafka struct {
+		Brokers  string `mapstructure:"brokers"`
+		GroupIDs struct {
+		} `mapstructure:"group_ids"`
+		Topics struct {
+		} `mapstructure:"topics"`
+	} `mapstructure:"kafka"`
 }
 
 var Cfg Config
@@ -25,7 +29,7 @@ var Cfg Config
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./api-gateway")
+	viper.AddConfigPath("./users-service")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
@@ -36,7 +40,7 @@ func InitConfig() {
 	}
 
 	if err := viper.Unmarshal(&Cfg); err != nil {
-		slog.Error("unable to devode config into struct", "error", err)
+		slog.Error("unable to decode config into struct", "error", err)
 		os.Exit(1)
 	}
 }

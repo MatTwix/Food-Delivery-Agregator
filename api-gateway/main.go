@@ -34,6 +34,10 @@ func main() {
 		slog.Error("COURIERS_SERVICE_URL is not set")
 		os.Exit(1)
 	}
+	if config.Cfg.URLs.UsersService == "" {
+		slog.Error("USERS_SERVICE_URL is not set")
+		os.Exit(1)
+	}
 
 	restaurantsServiceUrl, err := url.Parse(config.Cfg.URLs.RestaurantsService)
 	if err != nil {
@@ -50,10 +54,16 @@ func main() {
 		slog.Error("failed to parse COURIERS_SERVICE_URL", "error", err)
 		os.Exit(1)
 	}
+	usersServiceUrl, err := url.Parse(config.Cfg.URLs.UsersService)
+	if err != nil {
+		slog.Error("failed to parse USERS_SERVICE_URL", "error", err)
+		os.Exit(1)
+	}
 
 	restaurantsProxy := httputil.NewSingleHostReverseProxy(restaurantsServiceUrl)
 	oredersProxy := httputil.NewSingleHostReverseProxy(ordersServiceUrl)
 	couriersProxy := httputil.NewSingleHostReverseProxy(couriersServiceUrl)
+	usersProxy := httputil.NewSingleHostReverseProxy(usersServiceUrl)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +88,13 @@ func main() {
 			r.URL.Path = after
 			slog.Info("forwarding to couriers-service", "path", r.URL.Path)
 			couriersProxy.ServeHTTP(w, r)
+			return
+		}
+
+		if after, ok := strings.CutPrefix(path, "/api/users"); ok {
+			r.URL.Path = after
+			slog.Info("forwarding to users-service", "path", r.URL.Path)
+			usersProxy.ServeHTTP(w, r)
 			return
 		}
 
