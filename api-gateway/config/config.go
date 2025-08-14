@@ -18,6 +18,9 @@ type Config struct {
 		CouriersService    string `mapstructure:"couriers_service"`
 		UsersService       string `mapstructure:"users_service"`
 	} `mapstructure:"urls"`
+	JWT struct {
+		Secret string `mapstructure:"secret"`
+	} `mapstructure:"jwt"`
 }
 
 var Cfg Config

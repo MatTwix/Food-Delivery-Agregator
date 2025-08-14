@@ -5,3 +5,5 @@ urls:
   orders_service: "http://orders-service:3002"
   couriers_service: "http://couriers-service:3003"
   users_service: "http://users-service:3004"
+jwt:
+  secret: ""

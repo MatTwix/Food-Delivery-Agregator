@@ -144,6 +144,8 @@ services:
       - "3000:3000"
     depends_on:
       - restaurants-service
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
     
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0

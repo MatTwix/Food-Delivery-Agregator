@@ -8,11 +8,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/api-gateway/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/api-gateway/middleware"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
@@ -39,71 +40,54 @@ func main() {
 		os.Exit(1)
 	}
 
-	restaurantsServiceUrl, err := url.Parse(config.Cfg.URLs.RestaurantsService)
-	if err != nil {
-		slog.Error("failed to parse RESTAURANTS_SERVICE_URL", "error", err)
-		os.Exit(1)
-	}
-	ordersServiceUrl, err := url.Parse(config.Cfg.URLs.OrdersService)
-	if err != nil {
-		slog.Error("failed to parse ORDERS_SERVICE_URL", "error", err)
-		os.Exit(1)
-	}
-	couriersServiceUrl, err := url.Parse(config.Cfg.URLs.CouriersService)
-	if err != nil {
-		slog.Error("failed to parse COURIERS_SERVICE_URL", "error", err)
-		os.Exit(1)
-	}
-	usersServiceUrl, err := url.Parse(config.Cfg.URLs.UsersService)
-	if err != nil {
-		slog.Error("failed to parse USERS_SERVICE_URL", "error", err)
-		os.Exit(1)
-	}
+	restaurantsProxy := createReverseProxy(config.Cfg.URLs.RestaurantsService)
+	ordersProxy := createReverseProxy(config.Cfg.URLs.OrdersService)
+	couriersProxy := createReverseProxy(config.Cfg.URLs.CouriersService)
+	usersProxy := createReverseProxy(config.Cfg.URLs.UsersService)
 
-	restaurantsProxy := httputil.NewSingleHostReverseProxy(restaurantsServiceUrl)
-	oredersProxy := httputil.NewSingleHostReverseProxy(ordersServiceUrl)
-	couriersProxy := httputil.NewSingleHostReverseProxy(couriersServiceUrl)
-	usersProxy := httputil.NewSingleHostReverseProxy(usersServiceUrl)
+	restaurantsProxyHandler := http.StripPrefix("/api/restaurants", restaurantsProxy)
+	ordersProxyHandler := http.StripPrefix("/api/orders", ordersProxy)
+	couriersProxyHandler := http.StripPrefix("/api/couriers", couriersProxy)
+	usersProxyHandler := http.StripPrefix("/api/users", usersProxy)
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		slog.Info("incoming request", "path", path)
+	r := chi.NewRouter()
 
-		if after, ok := strings.CutPrefix(path, "/api/restaurants"); ok {
-			r.URL.Path = after
-			slog.Info("forwarding to restaurants-service", "path", r.URL.Path)
-			restaurantsProxy.ServeHTTP(w, r)
-			return
-		}
+	r.Group(func(r chi.Router) {
+		slog.Info("setting up public routes")
+		r.Post("/api/users/register", usersProxyHandler.ServeHTTP)
+		r.Post("/api/users/login", usersProxyHandler.ServeHTTP)
 
-		if after, ok := strings.CutPrefix(path, "/api/orders"); ok {
-			r.URL.Path = after
-			slog.Info("forwarding to orders-service", "path", r.URL.Path)
-			oredersProxy.ServeHTTP(w, r)
-			return
-		}
+		r.Get("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
+		r.Get("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
+		r.Get("/api/restaurants/menu_items/restaurant/{id}", restaurantsProxyHandler.ServeHTTP)
 
-		if after, ok := strings.CutPrefix(path, "/api/couriers"); ok {
-			r.URL.Path = after
-			slog.Info("forwarding to couriers-service", "path", r.URL.Path)
-			couriersProxy.ServeHTTP(w, r)
-			return
-		}
+		r.Get("/api/restaurants/health", restaurantsProxyHandler.ServeHTTP)
+		r.Get("/api/orders/health", ordersProxyHandler.ServeHTTP)
+		r.Get("/api/couriers/health", couriersProxyHandler.ServeHTTP)
+	})
 
-		if after, ok := strings.CutPrefix(path, "/api/users"); ok {
-			r.URL.Path = after
-			slog.Info("forwarding to users-service", "path", r.URL.Path)
-			usersProxy.ServeHTTP(w, r)
-			return
-		}
+	r.Group(func(r chi.Router) {
+		slog.Info("setting up protected routes")
+		r.Use(middleware.AuthMiddleware)
 
-		http.Error(w, "Not found", http.StatusNotFound)
+		r.Get("/api/users/users", usersProxyHandler.ServeHTTP)
+
+		r.Post("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
+		r.Put("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
+		r.Delete("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
+
+		r.Get("/api/restaurants/menu_items", restaurantsProxyHandler.ServeHTTP)
+		r.Post("/api/restaurants/menu_items", restaurantsProxyHandler.ServeHTTP)
+		r.Put("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
+		r.Delete("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
+
+		r.Mount("/api/orders", http.StripPrefix("/api/orders", ordersProxy))
+		r.Mount("/api/couriers", http.StripPrefix("/api/couriers", couriersProxy))
 	})
 
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
-		Handler: mux,
+		Handler: r,
 	}
 
 	go func() {
@@ -127,4 +111,14 @@ func main() {
 	slog.Info("HTTP server stopped.")
 
 	slog.Info("service gracefully stopped.")
+}
+
+func createReverseProxy(targetURL string) *httputil.ReverseProxy {
+	remote, err := url.Parse(targetURL)
+	if err != nil {
+		slog.Error("failed to parse target url", "url", targetURL, "error", err)
+		os.Exit(1)
+	}
+
+	return httputil.NewSingleHostReverseProxy(remote)
 }
