@@ -14,12 +14,14 @@ import (
 )
 
 type UserHandler struct {
-	store *store.UserStore
+	userStore  *store.UserStore
+	tokenStore *store.TokenStore
 }
 
-func NewUserHandler(s *store.UserStore) *UserHandler {
+func NewUserHandler(uStore *store.UserStore, tStore *store.TokenStore) *UserHandler {
 	return &UserHandler{
-		store: s,
+		userStore:  uStore,
+		tokenStore: tStore,
 	}
 }
 
@@ -31,6 +33,10 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 type LoginResponce struct {
@@ -61,7 +67,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		PasswordHash: hashedPassword,
 	}
 
-	if err := h.store.Create(r.Context(), user); err != nil {
+	if err := h.userStore.Create(r.Context(), user); err != nil {
 		//TODO: process repeating email error
 		slog.Error("failed to create user", "error", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
@@ -86,7 +92,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.store.GetByEmail(r.Context(), req.Email)
+	user, err := h.userStore.GetByEmail(r.Context(), req.Email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
@@ -102,10 +108,22 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := auth.GenerateTokens(user.ID, user.Role)
+	accessToken, refreshToken, refreshExpiresAt, err := auth.GenerateTokens(user.ID, user.Role)
 	if err != nil {
 		slog.Error("failed to generate tokens", "error", err)
 		http.Error(w, "Failed to generate tokens", http.StatusInternalServerError)
+		return
+	}
+
+	token := models.Token{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: refreshExpiresAt,
+	}
+
+	if err := h.tokenStore.SaveRefreshToken(r.Context(), &token); err != nil {
+		slog.Error("failed to save token to db", "error", err)
+		http.Error(w, "Failed to save session", http.StatusInternalServerError)
 		return
 	}
 
@@ -116,8 +134,59 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var req RefreshRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	claims, err := auth.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		slog.Error("failed to validate token", "token", req.RefreshToken, "error", err)
+		http.Error(w, "Invalid or expired refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	//TODO: check that token still exists in db
+
+	user, err := h.userStore.GetByID(r.Context(), claims.UserID)
+	if err != nil {
+		slog.Error("failed to get user by id", "user_id", claims.UserID, "error", err)
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
+	h.tokenStore.DeleteRefreshToken(r.Context(), req.RefreshToken)
+
+	accessToken, newRefreshToken, newRefreshExpiresAt, err := auth.GenerateTokens(user.ID, user.Role)
+	if err != nil {
+		slog.Error("failed to generate tokens", "user_id", user.ID, "error", err)
+		http.Error(w, "Failed to generate tokens", http.StatusUnauthorized)
+		return
+	}
+
+	token := models.Token{
+		UserID:    user.ID,
+		Token:     newRefreshToken,
+		ExpiresAt: newRefreshExpiresAt,
+	}
+
+	if err := h.tokenStore.SaveRefreshToken(r.Context(), &token); err != nil {
+		slog.Error("failed to save token", "token", newRefreshToken, "error", err)
+		http.Error(w, "Failed to save new session", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(LoginResponce{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
+	})
+}
+
 func (h *UserHandler) GetAllUses(w http.ResponseWriter, r *http.Request) {
-	users, err := h.store.GetAll(r.Context())
+	users, err := h.userStore.GetAll(r.Context())
 	if err != nil {
 		slog.Error("failed to get all users", "error", err)
 		http.Error(w, "Error getting all users", http.StatusInternalServerError)

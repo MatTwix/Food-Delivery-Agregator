@@ -56,6 +56,7 @@ func main() {
 		slog.Info("setting up public routes")
 		r.Post("/api/users/register", usersProxyHandler.ServeHTTP)
 		r.Post("/api/users/login", usersProxyHandler.ServeHTTP)
+		r.Post("/api/users/refresh", usersProxyHandler.ServeHTTP)
 
 		r.Get("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
 		r.Get("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)

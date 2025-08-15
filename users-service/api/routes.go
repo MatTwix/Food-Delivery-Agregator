@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func SetupRoutes(userStore *store.UserStore) *chi.Mux {
+func SetupRoutes(userStore *store.UserStore, tokenStore *store.TokenStore) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -19,12 +19,16 @@ func SetupRoutes(userStore *store.UserStore) *chi.Mux {
 		fmt.Fprintf(w, "Users service is up and running!")
 	})
 
-	userHandler := handlers.NewUserHandler(userStore)
+	userHandler := handlers.NewUserHandler(userStore, tokenStore)
+
+	r.Route("/", func(r chi.Router) {
+		r.Post("/register", userHandler.Register)
+		r.Post("/login", userHandler.Login)
+		r.Post("/refresh", userHandler.Refresh)
+	})
 
 	r.Route("/users", func(r chi.Router) {
 		r.Get("/", userHandler.GetAllUses)
-		r.Post("/register", userHandler.Register)
-		r.Post("/login", userHandler.Login)
 	})
 
 	return r

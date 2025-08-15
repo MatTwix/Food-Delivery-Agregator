@@ -48,6 +48,20 @@ func (s *UserStore) GetAll(ctx context.Context) ([]models.User, error) {
 	return users, nil
 }
 
+func (s *UserStore) GetByID(ctx context.Context, id string) (models.User, error) {
+	query := `
+		SELECT id, email, password_hash, role, created_at, updated_at
+		FROM users
+		WHERE id = $1
+	`
+
+	var user models.User
+	err := s.db.QueryRow(ctx, query, id).
+		Scan(&user.ID, &user.Email, &user.PasswordHash, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+
+	return user, err
+}
+
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (models.User, error) {
 	query := `
 		SELECT id, email, password_hash, role, created_at, updated_at

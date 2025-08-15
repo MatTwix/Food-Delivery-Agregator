@@ -27,8 +27,9 @@ func main() {
 	db := database.DB
 
 	userStore := store.NewUserStore(db)
+	tokenStore := store.NewTokenStore(db)
 
-	router := api.SetupRoutes(userStore)
+	router := api.SetupRoutes(userStore, tokenStore)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
