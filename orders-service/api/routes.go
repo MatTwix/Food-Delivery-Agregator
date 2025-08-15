@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/handlers"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/messaging"
+	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/middleware"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/store"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 func SetupRoutes(restaurantStore *store.RestaurantStore, orderStore *store.OrderStore, grpcClient pb.RestaurantServiceClient, kafkaProducer *messaging.Producer) *chi.Mux {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
 
 	orderHandler := handlers.NewOrderHandler(orderStore, restaurantStore, grpcClient, kafkaProducer)
 
@@ -24,7 +26,10 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, orderStore *store.Order
 	})
 
 	r.Route("/orders", func(r chi.Router) {
-		r.Get("/", orderHandler.GetAllOrders)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.CheckRole(auth.RoleManager))
+			r.Get("/", orderHandler.GetAllOrders)
+		})
 		r.Get("/{id}", orderHandler.GetOrderByID)
 		r.Post("/", orderHandler.CreateOrder)
 	})

@@ -65,6 +65,7 @@ func main() {
 		r.Get("/api/restaurants/health", restaurantsProxyHandler.ServeHTTP)
 		r.Get("/api/orders/health", ordersProxyHandler.ServeHTTP)
 		r.Get("/api/couriers/health", couriersProxyHandler.ServeHTTP)
+		r.Get("/api/users/health", usersProxyHandler.ServeHTTP)
 	})
 
 	r.Group(func(r chi.Router) {

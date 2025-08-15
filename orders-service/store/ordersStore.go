@@ -122,11 +122,11 @@ func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 	defer tx.Rollback(ctx)
 
 	orderQuery := `
-		INSERT INTO orders (restaurant_id, total_price, status)
-		VALUES ($1, $2, $3)
+		INSERT INTO orders (user_id, restaurant_id, total_price, status)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at`
 
-	err = tx.QueryRow(ctx, orderQuery, order.RestaurantID, order.TotalPrice, order.Status).
+	err = tx.QueryRow(ctx, orderQuery, order.UserID, order.RestaurantID, order.TotalPrice, order.Status).
 		Scan(&order.ID, &order.CreatedAt, &order.UpdatedAt)
 	if err != nil {
 		return err

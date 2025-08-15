@@ -32,7 +32,7 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 			CREATE TABLE orders (
 				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 				restaurant_id UUID NOT NULL,
-				user_id UUID,
+				user_id UUID NOT NULL,
 				total_price NUMERIC(10, 2) NOT NULL,
 				courier_id UUID,
 				status VARCHAR(50) NOT NULL,

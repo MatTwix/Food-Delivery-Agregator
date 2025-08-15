@@ -8,7 +8,7 @@ import (
 type Order struct {
 	ID           string         `json:"id"`
 	RestaurantID string         `json:"restaurant_id"`
-	UserID       sql.NullString `json:"user_id,omitempty"`
+	UserID       string         `json:"user_id"`
 	TotalPrice   float64        `json:"total_price"`
 	Status       string         `json:"status"`
 	CourierID    sql.NullString `json:"courier_id,omitempty"`
