@@ -8,3 +8,6 @@ kafka:
   topics:
 jwt:
   secret: ""
+admin:
+  email: ""
+  password: ""

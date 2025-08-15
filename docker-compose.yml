@@ -133,6 +133,8 @@ services:
       - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@users-db:5432/users?sslmode=disable
       - KAFKA_BROKERS=${KAFKA_BROKERS}
       - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
   api-gateway:
     build:

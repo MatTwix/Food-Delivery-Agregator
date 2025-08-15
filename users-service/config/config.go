@@ -25,6 +25,10 @@ type Config struct {
 	JWT struct {
 		Secret string `mapstructure:"secret"`
 	} `mapstructure:"jwt"`
+	Admin struct {
+		Email    string `mapstructure:"email"`
+		Password string `mapstructure:"password"`
+	} `mapstructure:"admin"`
 }
 
 var Cfg Config

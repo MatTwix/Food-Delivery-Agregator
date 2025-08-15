@@ -7,6 +7,7 @@ import (
 
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/migrations"
+	"github.com/MatTwix/Food-Delivery-Agregator/users-service/seeders"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -33,4 +34,5 @@ func NewConnection() {
 	slog.Info("successfully connected to the database")
 
 	migrations.Migrate(DB)
+	seeders.Seed(DB)
 }
