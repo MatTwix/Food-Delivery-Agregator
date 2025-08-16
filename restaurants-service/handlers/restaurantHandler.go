@@ -18,6 +18,7 @@ type RestaurantHandler struct {
 }
 
 type restaurantsInput struct {
+	OwnerID     string `json:"owner_id" validate:"required"`
 	Name        string `json:"name" validate:"required"`
 	Address     string `json:"address" validate:"required"`
 	PhoneNumber string `json:"phone_number"`
@@ -74,6 +75,7 @@ func (h *RestaurantHandler) CreateRestaurant(w http.ResponseWriter, r *http.Requ
 	}
 
 	restaurant := models.Restaurant{
+		OwnerID:     input.OwnerID,
 		Name:        input.Name,
 		Address:     input.Address,
 		PhoneNumber: input.PhoneNumber,

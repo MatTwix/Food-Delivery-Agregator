@@ -31,6 +31,7 @@ func CreateRestaurantsTable(db *pgxpool.Pool) {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE restaurants (
 				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				owner_id UUID NOT NULL,
 				name VARCHAR(255) NOT NULL,
 				address TEXT NOT NULL,
 				phone_number VARCHAR(50),

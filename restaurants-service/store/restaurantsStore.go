@@ -19,7 +19,7 @@ func NewRestaurantsStore(db *pgxpool.Pool) *RestaurantStore {
 func (s *RestaurantStore) GetAll(ctx context.Context) ([]models.Restaurant, error) {
 	query := `
 		SELECT 
-		id, name, address, phone_number, created_at, updated_at 
+		id, owner_id, name, address, phone_number, created_at, updated_at 
 		FROM
 		restaurants
 	`
@@ -34,6 +34,7 @@ func (s *RestaurantStore) GetAll(ctx context.Context) ([]models.Restaurant, erro
 		var restaurant models.Restaurant
 		if err := rows.Scan(
 			&restaurant.ID,
+			&restaurant.OwnerID,
 			&restaurant.Name,
 			&restaurant.Address,
 			&restaurant.PhoneNumber,
@@ -51,7 +52,7 @@ func (s *RestaurantStore) GetAll(ctx context.Context) ([]models.Restaurant, erro
 func (s *RestaurantStore) GetByID(ctx context.Context, id string) (models.Restaurant, error) {
 	query := `
 		SELECT
-		name, address, phone_number, created_at, updated_at
+		owner_id, name, address, phone_number, created_at, updated_at
 		FROM
 		restaurants
 		WHERE
@@ -64,6 +65,7 @@ func (s *RestaurantStore) GetByID(ctx context.Context, id string) (models.Restau
 
 	err := s.db.QueryRow(ctx, query, id).
 		Scan(
+			&restaurant.OwnerID,
 			&restaurant.Name,
 			&restaurant.Address,
 			&restaurant.PhoneNumber,
@@ -74,15 +76,29 @@ func (s *RestaurantStore) GetByID(ctx context.Context, id string) (models.Restau
 	return restaurant, err
 }
 
+func (s *RestaurantStore) GetOwnerID(ctx context.Context, targetID string) (string, error) {
+	query := `
+		SELECT owner_id
+		FROM restaurants
+		WHERE id = $1
+	`
+
+	var ownerID string
+
+	err := s.db.QueryRow(ctx, query, targetID).Scan(&ownerID)
+
+	return ownerID, err
+}
+
 func (s *RestaurantStore) Create(ctx context.Context, restaurant *models.Restaurant) error {
 	query := `
 		INSERT INTO restaurants 
-		(name, address, phone_number)
+		(owner_id, name, address, phone_number)
 		VALUES
-		($1, $2, $3)
+		($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at`
 
-	err := s.db.QueryRow(ctx, query, restaurant.Name, restaurant.Address, restaurant.PhoneNumber).
+	err := s.db.QueryRow(ctx, query, restaurant.OwnerID, restaurant.Name, restaurant.Address, restaurant.PhoneNumber).
 		Scan(&restaurant.ID, &restaurant.CreatedAt, &restaurant.UpdatedAt)
 
 	return err

@@ -112,6 +112,21 @@ func (s *MenuItemStore) GetByRestaurantID(ctx context.Context, restauarntID stri
 	return menuItems, nil
 }
 
+func (s *MenuItemStore) GetRestaurantOwnerID(ctx context.Context, targetID string) (string, error) {
+	query := `
+		SELECT r.owner_id
+		FROM menu_items AS mi
+		JOIN restaurants AS r ON mi.restaurant_id = r.id
+		WHERE mi.id = $1
+	`
+
+	var ownerID string
+
+	err := s.db.QueryRow(ctx, query, targetID).Scan(&ownerID)
+
+	return ownerID, err
+}
+
 func (s *MenuItemStore) Create(ctx context.Context, menuItem *models.MenuItem) error {
 	query := `
 		INSERT INTO menu_items

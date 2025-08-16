@@ -15,10 +15,9 @@ type MenuItemHandler struct {
 }
 
 type MenuItemInputCreate struct {
-	RestaurantID string `json:"restaurant_id" validate:"required"`
-	Name         string `json:"name" validate:"required"`
-	Description  string `json:"description,omitempty"`
-	Price        int    `json:"price" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description,omitempty"`
+	Price       int    `json:"price" validate:"required"`
 }
 
 type MenuItemInputUpdate struct {
@@ -72,8 +71,10 @@ func (h *MenuItemHandler) CreateMenuItem(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	restaurantID := chi.URLParam(r, "id")
+
 	menuItem := models.MenuItem{
-		RestaurantID: input.RestaurantID,
+		RestaurantID: restaurantID,
 		Name:         input.Name,
 		Description:  input.Description,
 		Price:        input.Price,

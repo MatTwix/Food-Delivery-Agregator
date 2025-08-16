@@ -37,7 +37,6 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
