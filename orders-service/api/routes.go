@@ -27,10 +27,15 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, orderStore *store.Order
 
 	r.Route("/orders", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.CheckRole(auth.RoleManager))
+			r.Use(middleware.Authorize(auth.RoleManager, auth.RoleAdmin))
 			r.Get("/", orderHandler.GetAllOrders)
 		})
-		r.Get("/{id}", orderHandler.GetOrderByID)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AuthorizeOwnerOrRoles(orderStore.GetOwnerID, auth.RoleAdmin, auth.RoleManager))
+			r.Get("/{id}", orderHandler.GetOrderByID)
+		})
+
 		r.Post("/", orderHandler.CreateOrder)
 	})
 

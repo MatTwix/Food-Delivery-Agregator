@@ -114,6 +114,20 @@ func (s *OrderStore) GetByID(ctx context.Context, id string) (models.Order, erro
 	return order, nil
 }
 
+func (s *OrderStore) GetOwnerID(ctx context.Context, orderID string) (string, error) {
+	query := `
+		SELECT user_id
+		FROM orders
+		WHERE id = $1
+	`
+
+	var ownerID string
+
+	err := s.db.QueryRow(ctx, query, orderID).Scan(&ownerID)
+
+	return ownerID, err
+}
+
 func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {

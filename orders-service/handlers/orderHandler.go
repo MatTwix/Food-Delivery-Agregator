@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/messaging"
@@ -40,18 +39,10 @@ func NewOrderHandler(os *store.OrderStore, rs *store.RestaurantStore, grpc pb.Re
 }
 
 func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
-	requestingUserRole := r.Header.Get("X-User-Role")
-
 	orders, err := h.store.GetAll(r.Context())
 	if err != nil {
 		http.Error(w, "Error getting orders", http.StatusInternalServerError)
 		slog.Error("failed to get orders", "error", err)
-		return
-	}
-
-	//TODO: make list of verified roles and range by it
-	if auth.Role(requestingUserRole) != auth.RoleAdmin && auth.Role(requestingUserRole) != auth.RoleManager {
-		http.Error(w, "Forbidden: You do not have permisions to view orders list", http.StatusForbidden)
 		return
 	}
 
@@ -62,24 +53,11 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 
 func (h *OrderHandler) GetOrderByID(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "id")
-	requestingUserID := r.Header.Get("X-User-Id")
-	requestingUserRole := r.Header.Get("X-User-Role")
-
-	if requestingUserID == "" {
-		http.Error(w, "User ID is missing", http.StatusUnauthorized)
-		return
-	}
 
 	order, err := h.store.GetByID(r.Context(), orderID)
 	if err != nil {
 		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
 		slog.Error("failed to get order by id", "error", err)
-		return
-	}
-
-	//TODO: make list of verified roles and range by it
-	if order.UserID != requestingUserID && auth.Role(requestingUserRole) != auth.RoleAdmin && auth.Role(requestingUserRole) != auth.RoleManager {
-		http.Error(w, "Forbidden: You do not have permisions to view this order", http.StatusForbidden)
 		return
 	}
 
