@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/handlers"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/restaurants-service/middleware"
@@ -26,7 +27,7 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, menuItemStore *store.Me
 
 	r.Route("/restaurants", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authorize("admin", "manager"))
+			r.Use(middleware.Authorize(auth.RoleAdmin, auth.RoleManager))
 			r.Post("/", restaurantHandler.CreateRestaurant)
 		})
 
@@ -34,7 +35,7 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, menuItemStore *store.Me
 		r.Get("/{id}", restaurantHandler.GetRestaurantByID)
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.AuthorizeOwnerOrRoles(restaurantStore.GetOwnerID, "admin", "manager"))
+			r.Use(middleware.AuthorizeOwnerOrRoles(restaurantStore.GetOwnerID, auth.RoleAdmin, auth.RoleManager))
 
 			r.Put("/{id}", restaurantHandler.UpdateRestaurant)
 			r.Delete("/{id}", restaurantHandler.DeleteRestaurant)
@@ -45,15 +46,14 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, menuItemStore *store.Me
 
 	r.Route("/menu_items", func(r chi.Router) {
 		r.Get("/", menuItemHandler.GetMenuItems)
-		r.Get("/restaurant/{id}", menuItemHandler.GetMenuItemsByRestaurantID)
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.AuthorizeOwnerOrRoles(restaurantStore.GetOwnerID, "admin", "manager"))
+			r.Use(middleware.AuthorizeOwnerOrRoles(restaurantStore.GetOwnerID, auth.RoleAdmin, auth.RoleManager))
 			r.Post("/restaurant/{id}", menuItemHandler.CreateMenuItem)
 		})
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.AuthorizeOwnerOrRoles(menuItemStore.GetRestaurantOwnerID, "admin", "manager"))
+			r.Use(middleware.AuthorizeOwnerOrRoles(menuItemStore.GetRestaurantOwnerID, auth.RoleAdmin, auth.RoleManager))
 
 			r.Put("/{id}", menuItemHandler.UpdateMenuItem)
 			r.Delete("/{id}", menuItemHandler.DeleteMenuItem)

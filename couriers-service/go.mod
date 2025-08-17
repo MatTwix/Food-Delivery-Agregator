@@ -2,6 +2,8 @@ module github.com/MatTwix/Food-Delivery-Agregator/couriers-service
 
 go 1.23.6
 
+require github.com/MatTwix/Food-Delivery-Agregator/common v0.0.0-0010101000000-00000000000
+
 require github.com/go-playground/validator v9.31.0+incompatible
 
 require (
