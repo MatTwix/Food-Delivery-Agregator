@@ -88,22 +88,36 @@ All endpoints are accessed through the API Gateway on port `3000`.
 * `POST /api/users/refresh` - Refresh an expired access token.
 * `GET /api/restaurants/restaurants` - Get a list of all restaurants.
 * `GET /api/restaurants/restaurants/{id}` - Get details for a single restaurant.
+* `GET /api/restaurants/menu-items` - Get menu items for all of the restaurants.
 * `GET /api/restaurants/menu-items/restaurant/{id}` - Get menu items for a restaurant.
+* `GET /api/restaurants/health` - Check restaurants service status.
+* `GET /api/orders/health` - Check orders service status.
+* `GET /api/couriers/health` - Check couriers service status.
+* `GET /api/users/health` - Check users service status.
 
 ### Protected Endpoints (require `Authorization: Bearer <token>`)
 
 * **Users**
   * `GET /api/users/users` - Get all users (Admin only)
 * **Restaurants**
-  * `POST /api/restaurants/restaurants` - Create a new restaurant (Admin only).
-  * `POST /api/restaurants/menu-items/restaurant/{id}` - Add a menu item (Admin/Owner only).
+  * `POST /api/restaurants/restaurants` - Create a new restaurant (Admin/Manager only).
+  * `PUT /api/restaurants/restaurants/{id}` - Update the restaurant (Admin/Manager/Owner only).
+  * `DELETE /api/restaurants/restaurants/{id}` - Delete the restaurant (Admin/Manager/Owner only).
+  * `POST /api/restaurants/menu-items/restaurant/{id}` - Add a menu item (Admin/Manager/Restaurant owner only).
+  * `PUT /api/restaurants/menu-items/{id}` - Update the menu item (Admin/Manager/Restaurant owner only).
+  * `DELETE /api/restaurants/menu-items/{id}` - Delete the menu item (Admin/Manager/Restaurant owner only).
 * **Orders**
   * `POST /api/orders/orders` - Create a new order.
-  * `GET /api/orders/orders` - Get a list of your orders.
-  * `GET /api/orders/orders/{id}` - Get details for a specific order (Owner or Admin only).
+  * `GET /api/orders/orders` - Get a list of all orders (Admin/Manager Only).
+  * `GET /api/orders/orders/{id}` - Get details for a specific order (Admin/Manager/Owner only).
 * **Couriers**
-  * `POST /api/couriers/orders/{orderId}/picked_up` - Mark an order as picked up by courier.
-  * `POST /api/couriers/orders/{orderId}/delivered` - Mark an order as delivered.
+  * `GET /api/couriers/couriers` - Get list of all couriers (Admin only).
+  * `GET /api/couriers/couriers/available` - Get the available courier (Admin only).
+  * `POST /api/couriers/couriers` - Create a courier (Admin only).
+  * `PUT /api/couriers/couriers/{id}` - Update the courier (Admin only).
+  * `DELETE /api/couriers/couriers/{id}` - Delete the courier (Admin only).
+  * `POST /api/couriers/orders/{orderId}/picked_up` - Mark an order as picked up by courier (Admin/Courier only).
+  * `POST /api/couriers/orders/{orderId}/delivered` - Mark an order as delivered (Admin/Courier only).
 
 ## How to Run
 

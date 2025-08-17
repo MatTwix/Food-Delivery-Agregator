@@ -60,6 +60,7 @@ func main() {
 
 		r.Get("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
 		r.Get("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
+		r.Get("/api/restaurants/menu_items", restaurantsProxyHandler.ServeHTTP)
 		r.Get("/api/restaurants/menu_items/restaurant/{id}", restaurantsProxyHandler.ServeHTTP)
 
 		r.Get("/api/restaurants/health", restaurantsProxyHandler.ServeHTTP)
@@ -78,8 +79,6 @@ func main() {
 		r.Put("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
 		r.Delete("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
 
-		r.Get("/api/restaurants/menu_items", restaurantsProxyHandler.ServeHTTP)
-		r.Post("/api/restaurants/menu_items/restaurant/{id}", restaurantsProxyHandler.ServeHTTP)
 		r.Put("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
 		r.Delete("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
 

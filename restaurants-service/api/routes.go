@@ -46,9 +46,11 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, menuItemStore *store.Me
 
 	r.Route("/menu_items", func(r chi.Router) {
 		r.Get("/", menuItemHandler.GetMenuItems)
+		r.Get("/restaurant/{id}", menuItemHandler.GetMenuItemsByRestaurantID)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthorizeOwnerOrRoles(restaurantStore.GetOwnerID, auth.RoleAdmin, auth.RoleManager))
+
 			r.Post("/restaurant/{id}", menuItemHandler.CreateMenuItem)
 		})
 

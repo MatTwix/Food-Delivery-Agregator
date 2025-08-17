@@ -27,7 +27,7 @@ func SetupRoutes(couriersStore *store.CourierStore, producer *messaging.Producer
 
 	r.Route("/couriers", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authorize("admin"))
+			r.Use(middleware.Authorize(auth.RoleAdmin))
 
 			r.Get("/", couriersHandler.GetCouriers)
 			r.Get("/available", couriersHandler.GetAvailableCourier)
