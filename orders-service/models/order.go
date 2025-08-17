@@ -18,8 +18,8 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID         string  `json:"id"`
-	OrderID    string  `json:"order_id"`
+	ID         string  `json:"id,omitempty"`
+	OrderID    string  `json:"order_id,omitempty"`
 	MenuItemID string  `json:"menu_item_id"`
 	Quantity   int     `json:"quantity"`
 	Price      float64 `json:"price"`
