@@ -12,6 +12,7 @@ import (
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/database"
+	"github.com/MatTwix/Food-Delivery-Agregator/users-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/store"
 )
 
@@ -20,16 +21,26 @@ func main() {
 	config.InitValidator()
 	config.InitLogger()
 
+	messaging.InitTopicsNames()
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	database.NewConnection()
 	db := database.DB
 
+	messaging.InitTopics()
+
 	userStore := store.NewUserStore(db)
 	tokenStore := store.NewTokenStore(db)
 
-	router := api.SetupRoutes(userStore, tokenStore)
+	kafkaProducer, err := messaging.NewProducer()
+	if err != nil {
+		slog.Error("failed to create Kafka producer", "error", err)
+		os.Exit(1)
+	}
+
+	router := api.SetupRoutes(userStore, tokenStore, kafkaProducer)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
@@ -54,6 +65,9 @@ func main() {
 		slog.Error("failed to shut down servers", "error", err)
 	}
 	slog.Info("HTTP server stopped")
+
+	kafkaProducer.Close()
+	slog.Info("Kafka producer closed")
 
 	database.DB.Close()
 	slog.Info("database connection closed")

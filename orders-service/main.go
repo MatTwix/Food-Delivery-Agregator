@@ -72,8 +72,8 @@ func main() {
 	slog.Info("HTTP server stopped")
 
 	kafkaProducer.Close()
-
 	slog.Info("Kafka producer closed")
+
 	database.DB.Close()
 	slog.Info("database connection closed")
 

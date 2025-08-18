@@ -5,7 +5,9 @@ db:
 kafka:
   brokers: ""
   group_ids:
+    users: "users-service-group"
   topics:
+    users_role_event: "users.role.event"
 jwt:
   secret: ""
 admin:

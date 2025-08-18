@@ -2,7 +2,9 @@ package store
 
 import (
 	"context"
+	"errors"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -87,4 +89,23 @@ func (s *UserStore) Create(ctx context.Context, user *models.User) error {
 	err := s.db.QueryRow(ctx, query, user.Email, user.PasswordHash, user.Role).
 		Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt)
 	return err
+}
+
+func (s *UserStore) ChangeRole(ctx context.Context, id string, role auth.Role) error {
+	query := `
+		UPDATE users
+		SET role = $1
+		WHERE id = $2
+	`
+
+	result, err := s.db.Exec(ctx, query, role.String(), id)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
 }

@@ -6,22 +6,27 @@ import (
 	"log/slog"
 	"net/http"
 
+	commonAuth "github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/config"
+	"github.com/MatTwix/Food-Delivery-Agregator/users-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/store"
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 )
 
 type UserHandler struct {
 	userStore  *store.UserStore
 	tokenStore *store.TokenStore
+	producer   *messaging.Producer
 }
 
-func NewUserHandler(uStore *store.UserStore, tStore *store.TokenStore) *UserHandler {
+func NewUserHandler(uStore *store.UserStore, tStore *store.TokenStore, producer *messaging.Producer) *UserHandler {
 	return &UserHandler{
 		userStore:  uStore,
 		tokenStore: tStore,
+		producer:   producer,
 	}
 }
 
@@ -42,6 +47,17 @@ type RefreshRequest struct {
 type LoginResponce struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type ChangeRoleRequest struct {
+	Role string `json:"role" validate:"required,min=2,max=15"`
+	Name string `json:"name" validate:"required,min=2,max=50"`
+}
+
+type ChangeRoleResponce struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+	Name   string `json:"name"`
 }
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -195,4 +211,45 @@ func (h *UserHandler) GetAllUses(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
+}
+
+func (h *UserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
+	var req ChangeRoleRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := config.Validator.Struct(&req); err != nil {
+		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	id := chi.URLParam(r, "id")
+
+	if err := h.userStore.ChangeRole(r.Context(), id, commonAuth.Role(req.Role)); err != nil {
+		slog.Error("failed to change user role", "user_id", id, "error", err)
+		http.Error(w, "Failed to change user role", http.StatusInternalServerError)
+		return
+	}
+
+	event := ChangeRoleResponce{
+		UserID: id,
+		Role:   req.Role,
+		Name:   req.Name,
+	}
+
+	eventBody, err := json.Marshal(event)
+	if err != nil {
+		slog.Error("failed to marshal message for Kafka event", "error", err)
+		http.Error(w, "Error sending role change event", http.StatusInternalServerError)
+		return
+	} else {
+		h.producer.Produce(r.Context(), messaging.UsersRoleEventTopic, []byte(id), eventBody)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(event)
 }

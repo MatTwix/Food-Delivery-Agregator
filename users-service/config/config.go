@@ -18,8 +18,10 @@ type Config struct {
 	Kafka struct {
 		Brokers  string `mapstructure:"brokers"`
 		GroupIDs struct {
+			Users string `mapstructure:"users"`
 		} `mapstructure:"group_ids"`
 		Topics struct {
+			UsersRoleEvent string `mapstructure:"users_role_event"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 	JWT struct {

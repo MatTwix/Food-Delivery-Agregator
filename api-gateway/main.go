@@ -74,6 +74,7 @@ func main() {
 		r.Use(middleware.AuthMiddleware)
 
 		r.Get("/api/users/users", usersProxyHandler.ServeHTTP)
+		r.Post("/api/users/users/{id}/role", usersProxyHandler.ServeHTTP)
 
 		r.Post("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
 		r.Put("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
