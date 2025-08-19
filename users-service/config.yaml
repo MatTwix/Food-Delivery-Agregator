@@ -7,7 +7,7 @@ kafka:
   group_ids:
     users: "users-service-group"
   topics:
-    users_role_event: "users.role.event"
+    users_role_assigned: "users.role.assigned"
 jwt:
   secret: ""
 admin:

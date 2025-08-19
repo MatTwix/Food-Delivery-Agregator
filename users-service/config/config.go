@@ -21,7 +21,7 @@ type Config struct {
 			Users string `mapstructure:"users"`
 		} `mapstructure:"group_ids"`
 		Topics struct {
-			UsersRoleEvent string `mapstructure:"users_role_event"`
+			UsersRoleAssigned string `mapstructure:"users_role_assigned"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 	JWT struct {

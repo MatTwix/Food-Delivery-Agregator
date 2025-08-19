@@ -55,9 +55,10 @@ type ChangeRoleRequest struct {
 }
 
 type ChangeRoleResponce struct {
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
-	Name   string `json:"name"`
+	UserID   string `json:"user_id"`
+	PrevRole string `json:"prev_role"`
+	NewRole  string `json:"new_role"`
+	Name     string `json:"name"`
 }
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -228,16 +229,19 @@ func (h *UserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 
-	if err := h.userStore.ChangeRole(r.Context(), id, commonAuth.Role(req.Role)); err != nil {
+	prevRole, err := h.userStore.ChangeRole(r.Context(), id, commonAuth.Role(req.Role))
+
+	if err != nil {
 		slog.Error("failed to change user role", "user_id", id, "error", err)
 		http.Error(w, "Failed to change user role", http.StatusInternalServerError)
 		return
 	}
 
 	event := ChangeRoleResponce{
-		UserID: id,
-		Role:   req.Role,
-		Name:   req.Name,
+		UserID:   id,
+		PrevRole: prevRole,
+		NewRole:  req.Role,
+		Name:     req.Name,
 	}
 
 	eventBody, err := json.Marshal(event)
@@ -246,7 +250,7 @@ func (h *UserHandler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error sending role change event", http.StatusInternalServerError)
 		return
 	} else {
-		h.producer.Produce(r.Context(), messaging.UsersRoleEventTopic, []byte(id), eventBody)
+		h.producer.Produce(r.Context(), messaging.UsersRoleAssignedTopic, []byte(id), eventBody)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

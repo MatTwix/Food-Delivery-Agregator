@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/models"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/store"
@@ -21,15 +22,24 @@ type OrderPaidEvent struct {
 }
 
 type OrderPickedUpEvent struct {
-	OrderID string `json:"order_id"`
+	CourierID string `json:"courier_id"`
+	OrderID   string `json:"order_id"`
 }
 
 type OrderDeliveredEvent struct {
-	OrderID string `json:"order_id"`
+	CourierID string `json:"courier_id"`
+	OrderID   string `json:"order_id"`
 }
 
 type CourierAssignedEvent struct {
 	CourierID string `json:"courier_id"`
+}
+
+type UsersRoleAssignedEvent struct {
+	UserID   string `json:"user_id"`
+	PrevRole string `json:"prev_role"`
+	NewRole  string `json:"new_role"`
+	Name     string `json:"name"`
 }
 
 func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
@@ -38,7 +48,11 @@ func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliv
 	})
 
 	go startTopicConsumer(ctx, OrderDeliveredTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
-		handleOrderDelivered(ctx, msg, courierStore, deliveryStore)
+		handleOrderDelivered(ctx, msg, courierStore)
+	})
+
+	go startTopicConsumer(ctx, UsersRoleAssignedTopic, config.Cfg.Kafka.GroupIDs.Users, func(ctx context.Context, msg kafka.Message) {
+		handleUsersRoleAssigned(ctx, msg, courierStore)
 	})
 }
 
@@ -140,7 +154,7 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store
 	slog.Info("successfully assigned courier", "order_id", receivedEvent.ID)
 }
 
-func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore) {
+func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore) {
 	slog.Info("handling event", "event", OrderDeliveredTopic)
 
 	var event OrderDeliveredEvent
@@ -149,20 +163,57 @@ func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *
 		return
 	}
 
-	courierID, err := deliveryStore.GetCourierIDByOrderID(ctx, event.OrderID)
-	if err != nil {
-		slog.Error("failed to get courier id", "error", err)
-		return
-	}
-
 	//TODO: check if there is another deliveries by current courier
 
-	if err := courierStore.UpdateStatus(ctx, courierID, "available"); err != nil {
+	if err := courierStore.UpdateStatus(ctx, event.CourierID, "available"); err != nil {
 		slog.Error("failed to update courier status to 'available'", "error", err)
 		return
 	}
 
 	//TODO: publish event to courier.became_available topic (optionaly)
 
-	slog.Info("courier became available", "courier_id", courierID)
+	slog.Info("courier became available", "courier_id", event.CourierID)
+}
+
+func handleUsersRoleAssigned(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore) {
+	slog.Info("handling event", "event", UsersRoleAssignedTopic)
+
+	var event UsersRoleAssignedEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		slog.Error("failed to unmarshal Kafka message", "error", err)
+		return
+	}
+
+	if event.NewRole != auth.RoleCourier.String() && event.PrevRole != auth.RoleCourier.String() {
+		slog.Info("assigned or previous are not identificated as 'courier', closing")
+		return
+	}
+
+	if event.PrevRole == auth.RoleCourier.String() {
+		slog.Info("deleting courier from local database due changing status")
+
+		err := courierStore.Delete(ctx, event.UserID)
+		if err != nil {
+			slog.Error("failed to delete courier from local database", "error", err)
+			return
+		}
+
+		slog.Info("courier successfully deleted from local database")
+		return
+	}
+
+	slog.Info("adding courier to local database", "name", event.Name)
+
+	courier := models.Courier{
+		ID:   event.UserID,
+		Name: event.Name,
+	}
+
+	err := courierStore.Create(ctx, &courier)
+	if err != nil {
+		slog.Error("failed to create courier", "error", err)
+		return
+	}
+
+	slog.Info("courier successfully saved to the local database", "courier_name", courier.Name, "courier_id", courier.ID)
 }

@@ -15,12 +15,10 @@ func NewDeliveryStore(db *pgxpool.Pool) *DeliveryStore {
 	return &DeliveryStore{db: db}
 }
 
-func (s *DeliveryStore) GetCourierIDByOrderID(ctx context.Context, orderID string) (string, error) {
+func (s *DeliveryStore) GetPerformerID(ctx context.Context, orderID string) (string, error) {
 	query := `
-		SELECT
-		courier_id
-		FROM
-		deliveries
+		SELECT courier_id
+		FROM deliveries
 		WHERE order_id = $1
 	`
 

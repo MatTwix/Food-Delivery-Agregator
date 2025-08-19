@@ -5,6 +5,7 @@ db:
 kafka:
   brokers: ""
   group_ids:
+    users: "couriers-service-group-users"
     payments: "couriers-service-group-payments"
     orders: "couriers-service-group-orders"
   topics:
@@ -14,3 +15,5 @@ kafka:
 
     courier_assigned: "courier.assigned"
     courier_search_failed: "courier.search.failed"
+
+    users_role_assigned: "users.role.assigned"

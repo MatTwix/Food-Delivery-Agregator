@@ -12,15 +12,15 @@ import (
 )
 
 var (
-	UsersRoleEventTopic string
+	UsersRoleAssignedTopic string
 )
 
 var Topics []string
 
 func InitTopicsNames() {
-	UsersRoleEventTopic = config.Cfg.Kafka.Topics.UsersRoleEvent
+	UsersRoleAssignedTopic = config.Cfg.Kafka.Topics.UsersRoleAssigned
 	Topics = []string{
-		UsersRoleEventTopic,
+		UsersRoleAssignedTopic,
 	}
 }
 

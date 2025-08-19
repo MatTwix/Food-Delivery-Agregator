@@ -99,6 +99,7 @@ All endpoints are accessed through the API Gateway on port `3000`.
 
 * **Users**
   * `GET /api/users/users` - Get all users (Admin only)
+  * `POST /api/users/users/{id}/role` - Give user a role (Admin only)
 * **Restaurants**
   * `POST /api/restaurants/restaurants` - Create a new restaurant (Admin/Manager only).
   * `PUT /api/restaurants/restaurants/{id}` - Update the restaurant (Admin/Manager/Owner only).
@@ -113,9 +114,7 @@ All endpoints are accessed through the API Gateway on port `3000`.
 * **Couriers**
   * `GET /api/couriers/couriers` - Get list of all couriers (Admin only).
   * `GET /api/couriers/couriers/available` - Get the available courier (Admin only).
-  * `POST /api/couriers/couriers` - Create a courier (Admin only).
   * `PUT /api/couriers/couriers/{id}` - Update the courier (Admin only).
-  * `DELETE /api/couriers/couriers/{id}` - Delete the courier (Admin only).
   * `POST /api/couriers/orders/{orderId}/picked_up` - Mark an order as picked up by courier (Admin/Courier only).
   * `POST /api/couriers/orders/{orderId}/delivered` - Mark an order as delivered (Admin/Courier only).
 

@@ -30,7 +30,7 @@ func CreateCouriersTable(db *pgxpool.Pool) {
 	if !tableExists {
 		_, err = tx.Exec(ctx, `
 			CREATE TABLE couriers (
-				id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				id UUID PRIMARY KEY NOT NULL,
 				name VARCHAR(255) NOT NULL,
 				status VARCHAR(50) NOT NULL DEFAULT 'available',
 				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

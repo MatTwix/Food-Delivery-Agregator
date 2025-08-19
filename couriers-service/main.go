@@ -40,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	router := api.SetupRoutes(courierStore, kafkaProducer)
+	router := api.SetupRoutes(deliveryStore, courierStore, kafkaProducer)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,

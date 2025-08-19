@@ -91,21 +91,31 @@ func (s *UserStore) Create(ctx context.Context, user *models.User) error {
 	return err
 }
 
-func (s *UserStore) ChangeRole(ctx context.Context, id string, role auth.Role) error {
-	query := `
+func (s *UserStore) ChangeRole(ctx context.Context, id string, role auth.Role) (prevRole string, err error) {
+	selectQuery := `
+		SELECT role 
+		FROM users
+		WHERE id = $1
+	`
+
+	if err = s.db.QueryRow(ctx, selectQuery, id).Scan(&prevRole); err != nil {
+		return "", err
+	}
+
+	updateQuery := `
 		UPDATE users
 		SET role = $1
 		WHERE id = $2
 	`
 
-	result, err := s.db.Exec(ctx, query, role.String(), id)
+	result, err := s.db.Exec(ctx, updateQuery, role.String(), id)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if result.RowsAffected() == 0 {
-		return errors.New("user not found")
+		return "", errors.New("user not found")
 	}
 
-	return nil
+	return prevRole, nil
 }

@@ -13,7 +13,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
-func SetupRoutes(couriersStore *store.CourierStore, producer *messaging.Producer) *chi.Mux {
+func SetupRoutes(deliveryStore *store.DeliveryStore, courierStore *store.CourierStore, producer *messaging.Producer) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(chiMiddleware.Logger)
@@ -23,7 +23,7 @@ func SetupRoutes(couriersStore *store.CourierStore, producer *messaging.Producer
 		fmt.Fprint(w, "Couriers service is up and running!")
 	})
 
-	couriersHandler := handlers.NewCourierHandler(couriersStore, producer)
+	couriersHandler := handlers.NewCourierHandler(courierStore, producer)
 
 	r.Route("/couriers", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
@@ -31,19 +31,18 @@ func SetupRoutes(couriersStore *store.CourierStore, producer *messaging.Producer
 
 			r.Get("/", couriersHandler.GetCouriers)
 			r.Get("/available", couriersHandler.GetAvailableCourier)
-			r.Post("/", couriersHandler.CreateCourier)
 			r.Put("/{id}", couriersHandler.UpdateCourier)
-			r.Delete("/{id}", couriersHandler.DeleteCourier)
+			// r.Delete("/{id}", couriersHandler.DeleteCourier)
 		})
 
 	})
 
 	r.Route("/orders", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.Authorize(auth.RoleAdmin, auth.RoleCourier))
+			r.Use(middleware.AuthorizeOwnerOrRoles(deliveryStore.GetPerformerID, auth.RoleAdmin, auth.RoleCourier))
 
-			r.Post("/{orderID}/picked_up", couriersHandler.PickUpOrder)
-			r.Post("/{orderID}/delivered", couriersHandler.DeliverOrder)
+			r.Post("/{id}/picked_up", couriersHandler.PickUpOrder)
+			r.Post("/{id}/delivered", couriersHandler.DeliverOrder)
 		})
 	})
 

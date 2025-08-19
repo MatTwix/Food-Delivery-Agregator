@@ -20,6 +20,7 @@ type Config struct {
 		GroupIDs struct {
 			Payments string `mapstructure:"payments"`
 			Orders   string `mapstructure:"orders"`
+			Users    string `mapstructure:"users"`
 		} `mapstructure:"group_ids"`
 		Topics struct {
 			OrderPaid      string `mapstructure:"order_paid"`
@@ -28,6 +29,8 @@ type Config struct {
 
 			CourierAssigned     string `mapstructure:"courier_assigned"`
 			CourierSearchFailed string `mapstructure:"courier_search_failed"`
+
+			UsersRoleAssigned string `mapstructure:"users_role_assigned"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }

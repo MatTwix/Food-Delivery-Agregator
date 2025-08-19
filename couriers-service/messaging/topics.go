@@ -18,6 +18,8 @@ var (
 
 	CourierAssignedTopic     string
 	CourierSearchFailedTopic string
+
+	UsersRoleAssignedTopic string
 )
 
 var Topics []string
@@ -29,6 +31,7 @@ func InitTopicsNames() {
 
 	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
 	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
+	UsersRoleAssignedTopic = config.Cfg.Kafka.Topics.UsersRoleAssigned
 
 	Topics = []string{
 		OrderPaidTopic,
@@ -37,6 +40,7 @@ func InitTopicsNames() {
 
 		CourierAssignedTopic,
 		CourierSearchFailedTopic,
+		UsersRoleAssignedTopic,
 	}
 }
 

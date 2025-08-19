@@ -73,13 +73,13 @@ func (s *CourierStore) GetAvailable(ctx context.Context) (models.Courier, error)
 func (s *CourierStore) Create(ctx context.Context, courier *models.Courier) error {
 	query := `
 		INSERT INTO couriers
-		(name)
+		(id, name)
 		VALUES
-		($1)
+		($1, $2)
 		RETURNING id, status, created_at, updated_at
 	`
 
-	err := s.db.QueryRow(ctx, query, courier.Name).
+	err := s.db.QueryRow(ctx, query, courier.ID, courier.Name).
 		Scan(&courier.ID, &courier.Status, &courier.CreatedAt, &courier.UpdatedAt)
 
 	return err
