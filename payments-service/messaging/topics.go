@@ -19,19 +19,21 @@ var (
 	OrderUpdatedTopic string
 )
 
-var Topics = []string{
-	PaymentSucceededTopic,
-	PaymentFailedTopic,
-
-	OrderCreatedTopic,
-	OrderUpdatedTopic,
-}
+var Topics []string
 
 func InitTopicsNames() {
 	PaymentSucceededTopic = config.Cfg.Kafka.Topics.PaymentSucceeded
 	PaymentFailedTopic = config.Cfg.Kafka.Topics.PaymentFailed
 	OrderCreatedTopic = config.Cfg.Kafka.Topics.OrderCreated
 	OrderUpdatedTopic = config.Cfg.Kafka.Topics.OrderUpdated
+
+	Topics = []string{
+		PaymentSucceededTopic,
+		PaymentFailedTopic,
+
+		OrderCreatedTopic,
+		OrderUpdatedTopic,
+	}
 }
 
 func InitTopics() {

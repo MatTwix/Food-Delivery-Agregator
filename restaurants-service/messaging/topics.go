@@ -17,16 +17,18 @@ var (
 	RestaurantDeletedTopic string
 )
 
-var Topics = []string{
-	RestaurantCreatedTopic,
-	RestaurantUpdatedTopic,
-	RestaurantDeletedTopic,
-}
+var Topics []string
 
 func InitTopicsNames() {
 	RestaurantCreatedTopic = config.Cfg.Kafka.Topics.RestaurantCreated
 	RestaurantUpdatedTopic = config.Cfg.Kafka.Topics.RestaurantUpdated
 	RestaurantDeletedTopic = config.Cfg.Kafka.Topics.RestaurantDeleted
+
+	Topics = []string{
+		RestaurantCreatedTopic,
+		RestaurantUpdatedTopic,
+		RestaurantDeletedTopic,
+	}
 }
 
 func InitTopics() {

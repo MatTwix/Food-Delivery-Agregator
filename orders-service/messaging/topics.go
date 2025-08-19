@@ -28,22 +28,7 @@ var (
 	CourierSearchFailedTopic string
 )
 
-var Topics = []string{
-	RestaurantCreatedTopic,
-	RestaurantUpdatedTopic,
-	RestaurantDeletedTopic,
-
-	OrderCreatedTopic,
-	OrderPaidTopic,
-	OrderPickedUpTopic,
-	OrderDeliveredTopic,
-
-	PaymentSucceededTopic,
-	PaymentFailedTopic,
-
-	CourierAssignedTopic,
-	CourierSearchFailedTopic,
-}
+var Topics []string
 
 func InitTopicsNames() {
 	RestaurantCreatedTopic = config.Cfg.Kafka.Topics.RestaurantCreated
@@ -60,6 +45,23 @@ func InitTopicsNames() {
 
 	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
 	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
+
+	Topics = []string{
+		RestaurantCreatedTopic,
+		RestaurantUpdatedTopic,
+		RestaurantDeletedTopic,
+
+		OrderCreatedTopic,
+		OrderPaidTopic,
+		OrderPickedUpTopic,
+		OrderDeliveredTopic,
+
+		PaymentSucceededTopic,
+		PaymentFailedTopic,
+
+		CourierAssignedTopic,
+		CourierSearchFailedTopic,
+	}
 }
 
 func InitTopics() {
@@ -70,7 +72,7 @@ func InitTopics() {
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
-		slog.Error("failed to diali Kafka broker", "error", err)
+		slog.Error("failed to dial Kafka broker", "error", err)
 		os.Exit(1)
 	}
 	defer conn.Close()

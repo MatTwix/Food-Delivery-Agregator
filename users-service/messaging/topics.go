@@ -15,12 +15,13 @@ var (
 	UsersRoleEventTopic string
 )
 
-var Topics = []string{
-	UsersRoleEventTopic,
-}
+var Topics []string
 
 func InitTopicsNames() {
 	UsersRoleEventTopic = config.Cfg.Kafka.Topics.UsersRoleEvent
+	Topics = []string{
+		UsersRoleEventTopic,
+	}
 }
 
 func InitTopics() {
@@ -31,7 +32,7 @@ func InitTopics() {
 	brokers := strings.Split(config.Cfg.Kafka.Brokers, ",")
 	conn, err := kafka.Dial("tcp", brokers[0])
 	if err != nil {
-		slog.Error("failed to diali Kafka broker", "error", err)
+		slog.Error("failed to dial Kafka broker", "error", err)
 		os.Exit(1)
 	}
 	defer conn.Close()
