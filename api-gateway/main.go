@@ -73,16 +73,8 @@ func main() {
 		slog.Info("setting up protected routes")
 		r.Use(middleware.AuthMiddleware)
 
-		r.Get("/api/users/users", usersProxyHandler.ServeHTTP)
-		r.Post("/api/users/users/{id}/role", usersProxyHandler.ServeHTTP)
-
-		r.Post("/api/restaurants/restaurants", restaurantsProxyHandler.ServeHTTP)
-		r.Put("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
-		r.Delete("/api/restaurants/restaurants/{id}", restaurantsProxyHandler.ServeHTTP)
-
-		r.Put("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
-		r.Delete("/api/restaurants/menu_items/{id}", restaurantsProxyHandler.ServeHTTP)
-
+		r.Mount("/api/users", http.StripPrefix("/api/users", usersProxy))
+		r.Mount("/api/restaurants", http.StripPrefix("/api/restaurants", restaurantsProxy))
 		r.Mount("/api/orders", http.StripPrefix("/api/orders", ordersProxy))
 		r.Mount("/api/couriers", http.StripPrefix("/api/couriers", couriersProxy))
 	})

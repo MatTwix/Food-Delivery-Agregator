@@ -35,6 +35,7 @@ func SetupRoutes(userStore *store.UserStore, tokenStore *store.TokenStore, kafka
 
 		r.Get("/", userHandler.GetAllUses)
 		r.Post("/{id}/role", userHandler.ChangeUserRole)
+		r.Delete("/{id}", userHandler.DeleteUser)
 	})
 
 	return r

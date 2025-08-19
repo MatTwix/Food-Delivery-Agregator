@@ -119,3 +119,21 @@ func (s *UserStore) ChangeRole(ctx context.Context, id string, role auth.Role) (
 
 	return prevRole, nil
 }
+
+func (s *UserStore) Delete(ctx context.Context, id string) error {
+	query := `
+		DELETE FROM users
+		WHERE id = $1
+	`
+
+	result, err := s.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
+}

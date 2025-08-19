@@ -100,6 +100,7 @@ All endpoints are accessed through the API Gateway on port `3000`.
 * **Users**
   * `GET /api/users/users` - Get all users (Admin only)
   * `POST /api/users/users/{id}/role` - Give user a role (Admin only)
+  * `DELETE /api/users/users/{id}` - Delete user (Admin only)
 * **Restaurants**
   * `POST /api/restaurants/restaurants` - Create a new restaurant (Admin/Manager only).
   * `PUT /api/restaurants/restaurants/{id}` - Update the restaurant (Admin/Manager/Owner only).
