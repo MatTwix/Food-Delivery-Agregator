@@ -7,6 +7,8 @@ kafka:
     payment_failed: "payment.failed"
 
     order_created: "order.created"
-    order_updated: "order.paid"
+    order_updated: "order.updated"
     order_picked_up: "order.picked_up"
     order_delivered: "order.delivered"
+
+    notification_created: "notificaiton.created"

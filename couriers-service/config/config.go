@@ -15,6 +15,9 @@ type Config struct {
 	DB struct {
 		Source string `mapstructure:"source"`
 	} `mapstructure:"db"`
+	GRPC struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
 	Kafka struct {
 		Brokers  string `mapstructure:"brokers"`
 		GroupIDs struct {

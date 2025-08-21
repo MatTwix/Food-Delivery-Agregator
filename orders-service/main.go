@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
+	"google.golang.org/grpc"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/api"
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/clients"
@@ -41,15 +45,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	grpcClient := clients.NewResraurantServiceClient()
+	grpcServer := grpc.NewServer()
+	pb.RegisterOrderServiceServer(grpcServer, api.NewOrderGRPCServer(orderStore))
 
-	router := api.SetupRoutes(restaurantStore, orderStore, grpcClient, kafkaProducer)
+	restaurantGRPCClient := clients.NewResraurantServiceClient()
+
+	router := api.SetupRoutes(restaurantStore, orderStore, restaurantGRPCClient, kafkaProducer)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,
 	}
 
 	messaging.StartConsumers(ctx, restaurantStore, orderStore, kafkaProducer)
+
+	go func() {
+		lis, err := net.Listen("tcp", ":"+config.Cfg.GRPC.Port)
+		if err != nil {
+			slog.Error("failed to listen for gRPC", "error", err)
+			os.Exit(1)
+		}
+
+		slog.Info("gRPC server listening", "port", config.Cfg.GRPC.Port)
+		if err := grpcServer.Serve(lis); err != nil {
+			slog.Error("failed to serve gRPC", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	go func() {
 		slog.Info("starting orders service", "port", config.Cfg.HTTP.Port)

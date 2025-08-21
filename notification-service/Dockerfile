@@ -2,6 +2,7 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
+
 COPY notification-service/go.mod notification-service/go.sum ./notification-service/
 
 RUN echo "go 1.24" >> go.work

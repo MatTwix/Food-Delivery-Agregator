@@ -24,11 +24,13 @@ type OrderPaidEvent struct {
 type OrderPickedUpEvent struct {
 	CourierID string `json:"courier_id"`
 	OrderID   string `json:"order_id"`
+	UserID    string `json:"user_id"`
 }
 
 type OrderDeliveredEvent struct {
 	CourierID string `json:"courier_id"`
 	OrderID   string `json:"order_id"`
+	UserID    string `json:"user_id"`
 }
 
 type CourierAssignedEvent struct {

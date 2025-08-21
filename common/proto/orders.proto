@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package orders;
+
+option go_package = "github.com/MatTwix/Food-Delivery-Agregator/common/proto";
+
+service OrderService {
+    rpc GetOrderOwner(GetOrderOwnerRequest) returns (GetOrderOwnerResponce);
+}
+
+message GetOrderOwnerRequest {
+    string order_id = 1;
+}
+
+message GetOrderOwnerResponce {
+    string user_id = 1;
+}

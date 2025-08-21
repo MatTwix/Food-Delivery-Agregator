@@ -22,6 +22,8 @@ type Config struct {
 			OrderUpdated   string `mapstructure:"order_updated"`
 			OrderPickedUp  string `mapstructure:"order_picked_up"`
 			OrderDelivered string `mapstructure:"order_delivered"`
+
+			NotificationCreated string `mapstructure:"notification_created"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }

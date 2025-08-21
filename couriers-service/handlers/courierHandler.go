@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/models"
@@ -15,8 +16,9 @@ import (
 )
 
 type CourierHandler struct {
-	store    *store.CourierStore
-	producer *messaging.Producer
+	store        *store.CourierStore
+	producer     *messaging.Producer
+	ordersClient pb.OrderServiceClient
 }
 
 type CourierUpdateRequest struct {
@@ -24,10 +26,11 @@ type CourierUpdateRequest struct {
 	Status string `json:"status" validate:"required"`
 }
 
-func NewCourierHandler(s *store.CourierStore, p *messaging.Producer) *CourierHandler {
+func NewCourierHandler(s *store.CourierStore, p *messaging.Producer, ordersClient pb.OrderServiceClient) *CourierHandler {
 	return &CourierHandler{
-		store:    s,
-		producer: p,
+		store:        s,
+		producer:     p,
+		ordersClient: ordersClient,
 	}
 }
 
@@ -107,9 +110,19 @@ func (h *CourierHandler) PickUpOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderID")
 	courierID := r.Header.Get("X-User-Id")
 
+	ownerResp, err := h.ordersClient.GetOrderOwner(r.Context(), &pb.GetOrderOwnerRequest{
+		OrderId: orderID,
+	})
+	if err != nil {
+		slog.Error("failed to get order owner", "error", err)
+		http.Error(w, "Error getting order owner", http.StatusInternalServerError)
+		return
+	}
+
 	event := messaging.OrderPickedUpEvent{
 		CourierID: courierID,
 		OrderID:   orderID,
+		UserID:    ownerResp.UserId,
 	}
 
 	eventBody, err := json.Marshal(event)
@@ -130,9 +143,19 @@ func (h *CourierHandler) DeliverOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderID")
 	courierID := r.Header.Get("X-User-Id")
 
-	event := messaging.OrderDeliveredEvent{
+	ownerResp, err := h.ordersClient.GetOrderOwner(r.Context(), &pb.GetOrderOwnerRequest{
+		OrderId: orderID,
+	})
+	if err != nil {
+		slog.Error("failed to get order owner", "error", err)
+		http.Error(w, "Error getting order owner", http.StatusInternalServerError)
+		return
+	}
+
+	event := messaging.OrderPickedUpEvent{
 		CourierID: courierID,
 		OrderID:   orderID,
+		UserID:    ownerResp.UserId,
 	}
 
 	eventBody, err := json.Marshal(event)

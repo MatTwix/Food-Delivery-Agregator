@@ -19,6 +19,8 @@ var (
 	OrderUpdatedTopic   string
 	OrderPickedUpTopic  string
 	OrderDeliveredTopic string
+
+	NotificationCreatedTopic string
 )
 
 var Topics []string
@@ -32,6 +34,8 @@ func InitTopicsNames() {
 	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
 	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
 
+	NotificationCreatedTopic = config.Cfg.Kafka.Topics.NotificationCreated
+
 	Topics = []string{
 		PaymentSucceededTopic,
 		PaymentFailedTopic,
@@ -40,6 +44,8 @@ func InitTopicsNames() {
 		OrderUpdatedTopic,
 		OrderPickedUpTopic,
 		OrderDeliveredTopic,
+
+		NotificationCreatedTopic,
 	}
 }
 

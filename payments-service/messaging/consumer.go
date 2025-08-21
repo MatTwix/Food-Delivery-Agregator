@@ -15,6 +15,7 @@ import (
 
 type OrderCreatedEvent struct {
 	ID         string  `json:"id"`
+	UserID     string  `json:"user_id"`
 	TotalPrice float64 `json:"total_price"`
 }
 

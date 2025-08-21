@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/api"
+	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/clients"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/database"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/messaging"
@@ -40,7 +41,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	router := api.SetupRoutes(deliveryStore, courierStore, kafkaProducer)
+	orderGRPCClient := clients.NewOrdersServiceClient()
+
+	router := api.SetupRoutes(deliveryStore, courierStore, orderGRPCClient, kafkaProducer)
 	httpServer := &http.Server{
 		Addr:    ":" + config.Cfg.HTTP.Port,
 		Handler: router,

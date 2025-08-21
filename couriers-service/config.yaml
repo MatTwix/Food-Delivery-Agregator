@@ -1,5 +1,7 @@
 http:
   port: "3003"
+grpc:
+  port: "4040"
 db:
   source: ""
 kafka:

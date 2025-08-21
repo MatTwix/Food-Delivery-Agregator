@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -21,7 +22,13 @@ func main() {
 
 	messaging.InitTopics()
 
-	messaging.StartConsumers(ctx)
+	kafkaProducer, err := messaging.NewProducer()
+	if err != nil {
+		slog.Error("failed to create Kafka producer", "error", err)
+		os.Exit(1)
+	}
+
+	messaging.StartConsumers(ctx, kafkaProducer)
 
 	slog.Info("notificaion service started. Waiting for events...")
 	<-ctx.Done()

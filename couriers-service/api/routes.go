@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
+	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/handlers"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/messaging"
 	"github.com/MatTwix/Food-Delivery-Agregator/couriers-service/middleware"
@@ -13,7 +14,7 @@ import (
 	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
-func SetupRoutes(deliveryStore *store.DeliveryStore, courierStore *store.CourierStore, producer *messaging.Producer) *chi.Mux {
+func SetupRoutes(deliveryStore *store.DeliveryStore, courierStore *store.CourierStore, ordersClient pb.OrderServiceClient, producer *messaging.Producer) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(chiMiddleware.Logger)
@@ -23,7 +24,7 @@ func SetupRoutes(deliveryStore *store.DeliveryStore, courierStore *store.Courier
 		fmt.Fprint(w, "Couriers service is up and running!")
 	})
 
-	couriersHandler := handlers.NewCourierHandler(courierStore, producer)
+	couriersHandler := handlers.NewCourierHandler(courierStore, producer, ordersClient)
 
 	r.Route("/couriers", func(r chi.Router) {
 		r.Group(func(r chi.Router) {

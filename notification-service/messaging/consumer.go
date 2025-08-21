@@ -2,7 +2,7 @@ package messaging
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"strings"
@@ -12,10 +12,20 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func StartConsumers(ctx context.Context) {
+type NotifiableEvent struct {
+	UserID string `json:"user_id"`
+}
+
+type NotificationEvent struct {
+	UserID  string `json:"user_id"`
+	OrderID string `json:"order_id"`
+	Message string `json:"message"`
+}
+
+func StartConsumers(ctx context.Context, p *Producer) {
 	for _, topic := range GetTopics() {
 		go startTopicConsumer(ctx, topic, config.Cfg.Kafka.GroupIDs.Notification, func(ctx context.Context, msg kafka.Message) {
-			handleNotificaion(msg)
+			handleNotificaion(ctx, msg, p)
 		})
 	}
 }
@@ -67,10 +77,19 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 	}
 }
 
-func handleNotificaion(msg kafka.Message) {
+func handleNotificaion(ctx context.Context, msg kafka.Message, p *Producer) {
 	orderID := string(msg.Key)
 
+	var userID string
 	var notificationMessage string
+
+	var event NotifiableEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		slog.Error("failed to unmarshal Kafka message body", "error", err)
+		return
+	}
+
+	userID = event.UserID
 
 	switch msg.Topic {
 	case OrderCreatedTopic:
@@ -89,5 +108,18 @@ func handleNotificaion(msg kafka.Message) {
 		notificationMessage = "An unknown event occured."
 	}
 
-	slog.Debug(fmt.Sprintf("[NOTIFICATION] For Order ID: %s -> %s", orderID, notificationMessage))
+	externalEvent := &NotificationEvent{
+		UserID:  userID,
+		OrderID: orderID,
+		Message: notificationMessage,
+	}
+
+	eventBody, err := json.Marshal(externalEvent)
+	if err != nil {
+		slog.Error("failed to marshal notification for Kafka event", "error", err)
+	} else {
+		p.Produce(ctx, NotificationCreatedTopic, []byte(userID), eventBody)
+	}
+
+	slog.Info("notification formated and sended", "user_id", userID)
 }
