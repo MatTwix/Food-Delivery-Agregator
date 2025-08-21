@@ -107,7 +107,7 @@ func (h *CourierHandler) UpdateCourier(w http.ResponseWriter, r *http.Request) {
 // }
 
 func (h *CourierHandler) PickUpOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderID")
+	orderID := chi.URLParam(r, "id")
 	courierID := r.Header.Get("X-User-Id")
 
 	ownerResp, err := h.ordersClient.GetOrderOwner(r.Context(), &pb.GetOrderOwnerRequest{
@@ -140,7 +140,7 @@ func (h *CourierHandler) PickUpOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CourierHandler) DeliverOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderID")
+	orderID := chi.URLParam(r, "id")
 	courierID := r.Header.Get("X-User-Id")
 
 	ownerResp, err := h.ordersClient.GetOrderOwner(r.Context(), &pb.GetOrderOwnerRequest{

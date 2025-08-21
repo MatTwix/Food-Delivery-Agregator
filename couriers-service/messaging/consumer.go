@@ -142,7 +142,7 @@ func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store
 	}
 
 	sendingEvent := CourierAssignedEvent{
-		CourierID: receivedEvent.ID,
+		CourierID: courier.ID,
 	}
 
 	eventBody, err := json.Marshal(sendingEvent)

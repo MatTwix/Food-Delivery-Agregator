@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/common/auth"
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 )
 
 func Authorize(allowedRoles ...auth.Role) func(http.Handler) http.Handler {
