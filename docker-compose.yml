@@ -24,7 +24,7 @@ services:
       - "3001:3001"
       - "4040:4040"
     environment:
-      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@postgres-db:5432/${DB_NAME}?sslmode=disable
+      - DB_SOURCE=postgresql://${DB_USER}:${DB_PASSWORD}@postgres-db:5432/$restaurants?sslmode=disable
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
   orders-db:
