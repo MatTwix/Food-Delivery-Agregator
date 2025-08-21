@@ -165,8 +165,6 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: check that token still exists in db
-
 	user, err := h.userStore.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		slog.Error("failed to get user by id", "user_id", claims.UserID, "error", err)
@@ -174,7 +172,16 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.tokenStore.DeleteRefreshToken(r.Context(), req.RefreshToken)
+	if err = h.tokenStore.DeleteRefreshToken(r.Context(), req.RefreshToken); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Refresh token expired", http.StatusUnauthorized)
+			return
+		}
+
+		slog.Error("failed to delete refresh token from database", "error", err)
+		http.Error(w, "Failed to refresh tokens", http.StatusUnauthorized)
+		return
+	}
 
 	accessToken, newRefreshToken, newRefreshExpiresAt, err := auth.GenerateTokens(user.ID, user.Role)
 	if err != nil {

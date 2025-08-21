@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -33,6 +34,15 @@ func (s *TokenStore) DeleteRefreshToken(ctx context.Context, token string) error
 		WHERE token = $1
 	`
 
-	_, err := s.db.Exec(ctx, query, token)
-	return err
+	result, err := s.db.Exec(ctx, query, token)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+
+	return nil
 }
