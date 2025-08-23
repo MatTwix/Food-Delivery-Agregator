@@ -21,7 +21,7 @@ func NewOrderStore(db *pgxpool.Pool) *OrderStore {
 func (s *OrderStore) GetAll(ctx context.Context) ([]models.Order, error) {
 	orderQuery := `
 		SELECT
-		id, restaurant_id, user_id, total_price, status, courier_id, created_at, updated_at
+		id, restaurant_id, user_id, total_price, status, courier_id, retry_count, max_retry_count, next_retry_at, created_at, updated_at
 		FROM
 		orders
 	`
@@ -36,7 +36,19 @@ func (s *OrderStore) GetAll(ctx context.Context) ([]models.Order, error) {
 	for orderRows.Next() {
 		var order models.Order
 
-		err := orderRows.Scan(&order.ID, &order.RestaurantID, &order.UserID, &order.TotalPrice, &order.Status, &order.CourierID, &order.CreatedAt, &order.UpdatedAt)
+		err := orderRows.Scan(
+			&order.ID,
+			&order.RestaurantID,
+			&order.UserID,
+			&order.TotalPrice,
+			&order.Status,
+			&order.CourierID,
+			&order.RetryCount,
+			&order.MaxRetryCount,
+			&order.NextRetryAt,
+			&order.CreatedAt,
+			&order.UpdatedAt,
+		)
 
 		if err != nil {
 			return orders, err
@@ -74,15 +86,26 @@ func (s *OrderStore) GetAll(ctx context.Context) ([]models.Order, error) {
 func (s *OrderStore) GetByID(ctx context.Context, id string) (models.Order, error) {
 	orderQuery := `
 		SELECT
-		id, restaurant_id, user_id, total_price, status, courier_id, created_at, updated_at
+		id, restaurant_id, user_id, total_price, status, courier_id, retry_count, max_retry_count, next_retry_at, created_at, updated_at
 		FROM
 		orders
 		WHERE id = $1
 	`
 	var order models.Order
 
-	err := s.db.QueryRow(ctx, orderQuery, id).
-		Scan(&order.ID, &order.RestaurantID, &order.UserID, &order.TotalPrice, &order.Status, &order.CourierID, &order.CreatedAt, &order.UpdatedAt)
+	err := s.db.QueryRow(ctx, orderQuery, id).Scan(
+		&order.ID,
+		&order.RestaurantID,
+		&order.UserID,
+		&order.TotalPrice,
+		&order.Status,
+		&order.CourierID,
+		&order.RetryCount,
+		&order.MaxRetryCount,
+		&order.NextRetryAt,
+		&order.CreatedAt,
+		&order.UpdatedAt,
+	)
 
 	if err != nil {
 		return order, err

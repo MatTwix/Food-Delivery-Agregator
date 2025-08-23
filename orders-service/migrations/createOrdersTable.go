@@ -36,12 +36,16 @@ func CreateOrdersTable(db *pgxpool.Pool) {
 				total_price NUMERIC(10, 2) NOT NULL,
 				courier_id UUID,
 				status VARCHAR(50) NOT NULL,
+				retry_count INT NOT NULL DEFAULT 0,
+				max_retry_count INT NOT NULL DEFAULT 10,
+				next_retry_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
 				created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 				updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 			);
 
 			CREATE INDEX IF NOT EXISTS idx_orders_restaurant_id ON orders(restaurant_id);
 			CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+			CREATE INDEX IF NOT EXISTS idx_orders_status_next_retry ON orders(status, next_retry_at);
 		`)
 		if err != nil {
 			slog.Error("failed to create orders table", "error", err)
