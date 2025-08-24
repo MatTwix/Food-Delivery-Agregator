@@ -77,6 +77,17 @@ services:
     environment:
       - KAFKA_BROKERS=${KAFKA_BROKERS}
 
+  scheduler-service:
+    build:
+      context: .
+      dockerfile: ./scheduler-service/Dockerfile
+    container_name: scheduler-service
+    restart: on-failure
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_BROKERS=${KAFKA_BROKERS}
+
   couriers-db: 
     image: postgres:14-alpine
     container_name: couriers-db

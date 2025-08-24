@@ -1,0 +1,8 @@
+grpc:
+  port: "4040"
+kafka: 
+  brokers:
+  group_ids:
+    orders: "scheduler-service-group-orders"
+  topics:
+    courier_requested: "courier.requested"
