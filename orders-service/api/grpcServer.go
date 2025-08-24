@@ -28,3 +28,22 @@ func (s *OrderGRPCServer) GetOrderOwner(ctx context.Context, req *pb.GetOrderOwn
 		UserId: userID,
 	}, nil
 }
+
+func (s *OrderGRPCServer) GetRetryOrders(ctx context.Context, req *pb.ListOrdersRequest) (*pb.ListOrdersResponce, error) {
+	orders, err := s.orderStore.GetForRetry(ctx, req.Status, req.NextRetryAtLte, req.Limit)
+	if err != nil {
+		return nil, err
+	}
+
+	var pbOrders []*pb.OrderLite
+	for _, order := range orders {
+		pbOrders = append(pbOrders, &pb.OrderLite{
+			Id:            order.ID,
+			RetryCount:    int32(order.RetryCount),
+			MaxRetryCount: int32(order.RetryCount),
+			NextRetryAt:   order.NextRetryAt.Unix(),
+		})
+	}
+
+	return &pb.ListOrdersResponce{Orders: pbOrders}, nil
+}
