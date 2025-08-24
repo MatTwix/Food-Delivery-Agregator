@@ -28,6 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	// orderGRPCClient := clients.NewOrdersSerciceClient()
+
 	<-ctx.Done()
 
 	slog.Info("shutting down servers")

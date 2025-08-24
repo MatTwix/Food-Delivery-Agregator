@@ -2,11 +2,19 @@ module github.com/MatTwix/Food-Delivery-Agregator/scheduler-service
 
 go 1.23.6
 
-require github.com/spf13/viper v1.20.1
+require github.com/MatTwix/Food-Delivery-Agregator/common v0.0.0-0010101000000-00000000000
+
+require (
+	github.com/spf13/viper v1.20.1
+	google.golang.org/grpc v1.74.2
+)
 
 require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
+	google.golang.org/protobuf v1.36.8 // indirect
 )
 
 require (
@@ -22,7 +30,9 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/MatTwix/Food-Delivery-Agregator/common => ../common
