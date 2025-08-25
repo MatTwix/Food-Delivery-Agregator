@@ -16,6 +16,7 @@ var (
 	OrderPickedUpTopic  string
 	OrderDeliveredTopic string
 
+	CourierRequestedTopic    string
 	CourierAssignedTopic     string
 	CourierSearchFailedTopic string
 
@@ -29,8 +30,10 @@ func InitTopicsNames() {
 	OrderPickedUpTopic = config.Cfg.Kafka.Topics.OrderPickedUp
 	OrderDeliveredTopic = config.Cfg.Kafka.Topics.OrderDelivered
 
+	CourierRequestedTopic = config.Cfg.Kafka.Topics.CourierRequested
 	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
 	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
+
 	UsersRoleAssignedTopic = config.Cfg.Kafka.Topics.UsersRoleAssigned
 
 	Topics = []string{
@@ -38,8 +41,10 @@ func InitTopicsNames() {
 		OrderPickedUpTopic,
 		OrderDeliveredTopic,
 
+		CourierRequestedTopic,
 		CourierAssignedTopic,
 		CourierSearchFailedTopic,
+
 		UsersRoleAssignedTopic,
 	}
 }

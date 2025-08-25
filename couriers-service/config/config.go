@@ -30,6 +30,7 @@ type Config struct {
 			OrderPickedUp  string `mapstructure:"order_picked_up"`
 			OrderDelivered string `mapstructure:"order_delivered"`
 
+			CourierRequested    string `mapstructure:"courier_requested"`
 			CourierAssigned     string `mapstructure:"courier_assigned"`
 			CourierSearchFailed string `mapstructure:"courier_search_failed"`
 

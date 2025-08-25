@@ -14,14 +14,9 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type OrderPaidEvent struct {
-	ID string `json:"id"`
-}
-
-type OrderDeliveredEvent struct {
+type OrderEvent struct {
 	OrderID string `json:"order_id"`
 }
-
 type CourierAssignedEvent struct {
 	CourierID string `json:"courier_id"`
 }
@@ -178,8 +173,8 @@ func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store
 		return
 	}
 
-	event := OrderPaidEvent{
-		ID: orderID,
+	event := OrderEvent{
+		OrderID: orderID,
 	}
 
 	eventBody, err := json.Marshal(event)
@@ -188,6 +183,7 @@ func handlePaymentSucceeded(ctx context.Context, msg kafka.Message, store *store
 		return
 	} else {
 		p.Produce(ctx, OrderPaidTopic, []byte(orderID), eventBody)
+		p.Produce(ctx, CourierRequestedTopic, []byte(orderID), eventBody)
 	}
 
 	slog.Info("order status updated to 'paid'", "order_id", orderID)

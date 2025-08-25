@@ -23,5 +23,6 @@ kafka:
     payment_succeeded: "payment.succeeded"
     payment_failed: "payment.failed"
 
+    courier_requested: "courier.requested"
     courier_assigned: "courier.assigned"
     courier_search_failed: "courier.search.failed"

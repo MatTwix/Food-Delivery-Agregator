@@ -24,6 +24,7 @@ var (
 	PaymentSucceededTopic string
 	PaymentFailedTopic    string
 
+	CourierRequestedTopic    string
 	CourierAssignedTopic     string
 	CourierSearchFailedTopic string
 )
@@ -43,6 +44,7 @@ func InitTopicsNames() {
 	PaymentSucceededTopic = config.Cfg.Kafka.Topics.PaymentSucceeded
 	PaymentFailedTopic = config.Cfg.Kafka.Topics.PaymentFailed
 
+	CourierRequestedTopic = config.Cfg.Kafka.Topics.CourierRequested
 	CourierAssignedTopic = config.Cfg.Kafka.Topics.CourierAssigned
 	CourierSearchFailedTopic = config.Cfg.Kafka.Topics.CourierSearchFailed
 
@@ -59,6 +61,7 @@ func InitTopicsNames() {
 		PaymentSucceededTopic,
 		PaymentFailedTopic,
 
+		CourierRequestedTopic,
 		CourierAssignedTopic,
 		CourierSearchFailedTopic,
 	}

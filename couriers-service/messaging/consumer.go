@@ -17,7 +17,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type OrderPaidEvent struct {
+type CourierRequestedEvent struct {
 	ID string `json:"id"`
 }
 
@@ -45,8 +45,8 @@ type UsersRoleAssignedEvent struct {
 }
 
 func StartConsumers(ctx context.Context, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
-	go startTopicConsumer(ctx, OrderPaidTopic, config.Cfg.Kafka.GroupIDs.Payments, func(ctx context.Context, msg kafka.Message) {
-		handleOrderPaid(ctx, msg, courierStore, deliveryStore, p)
+	go startTopicConsumer(ctx, CourierRequestedTopic, config.Cfg.Kafka.GroupIDs.Payments, func(ctx context.Context, msg kafka.Message) {
+		handleCourierRequested(ctx, msg, courierStore, deliveryStore, p)
 	})
 
 	go startTopicConsumer(ctx, OrderDeliveredTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
@@ -105,10 +105,10 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 	}
 }
 
-func handleOrderPaid(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
-	slog.Info("handling event", "event", OrderPaidTopic)
+func handleCourierRequested(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore, deliveryStore *store.DeliveryStore, p *Producer) {
+	slog.Info("handling event", "event", CourierRequestedTopic)
 
-	var receivedEvent OrderPaidEvent
+	var receivedEvent CourierRequestedEvent
 	if err := json.Unmarshal(msg.Value, &receivedEvent); err != nil {
 		slog.Error("failed to unmarshal Kafka message", "error", err)
 		return

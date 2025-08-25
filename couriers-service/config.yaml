@@ -15,6 +15,7 @@ kafka:
     order_picked_up: "order.picked_up"
     order_delivered: "order.delivered"
 
+    courier_requested: "courier.requested"
     courier_assigned: "courier.assigned"
     courier_search_failed: "courier.search.failed"
 
