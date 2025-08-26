@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v5.29.3
-// source: orders.proto
+// source: proto/orders.proto
 
 package proto
 
@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrderServiceClient interface {
 	GetOrderOwner(ctx context.Context, in *GetOrderOwnerRequest, opts ...grpc.CallOption) (*GetOrderOwnerResponce, error)
-	ListOrders(ctx context.Context, in *ListOrdersRequest, opts ...grpc.CallOption) (*ListOrdersResponce, error)
+	GetRetryOrders(ctx context.Context, in *GetRetryOrdersRequest, opts ...grpc.CallOption) (*GetRetryOrdersResponce, error)
 }
 
 type orderServiceClient struct {
@@ -43,9 +43,9 @@ func (c *orderServiceClient) GetOrderOwner(ctx context.Context, in *GetOrderOwne
 	return out, nil
 }
 
-func (c *orderServiceClient) ListOrders(ctx context.Context, in *ListOrdersRequest, opts ...grpc.CallOption) (*ListOrdersResponce, error) {
-	out := new(ListOrdersResponce)
-	err := c.cc.Invoke(ctx, "/orders.OrderService/ListOrders", in, out, opts...)
+func (c *orderServiceClient) GetRetryOrders(ctx context.Context, in *GetRetryOrdersRequest, opts ...grpc.CallOption) (*GetRetryOrdersResponce, error) {
+	out := new(GetRetryOrdersResponce)
+	err := c.cc.Invoke(ctx, "/orders.OrderService/GetRetryOrders", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *orderServiceClient) ListOrders(ctx context.Context, in *ListOrdersReque
 // for forward compatibility
 type OrderServiceServer interface {
 	GetOrderOwner(context.Context, *GetOrderOwnerRequest) (*GetOrderOwnerResponce, error)
-	ListOrders(context.Context, *ListOrdersRequest) (*ListOrdersResponce, error)
+	GetRetryOrders(context.Context, *GetRetryOrdersRequest) (*GetRetryOrdersResponce, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -68,8 +68,8 @@ type UnimplementedOrderServiceServer struct {
 func (UnimplementedOrderServiceServer) GetOrderOwner(context.Context, *GetOrderOwnerRequest) (*GetOrderOwnerResponce, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrderOwner not implemented")
 }
-func (UnimplementedOrderServiceServer) ListOrders(context.Context, *ListOrdersRequest) (*ListOrdersResponce, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListOrders not implemented")
+func (UnimplementedOrderServiceServer) GetRetryOrders(context.Context, *GetRetryOrdersRequest) (*GetRetryOrdersResponce, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRetryOrders not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 
@@ -102,20 +102,20 @@ func _OrderService_GetOrderOwner_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_ListOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListOrdersRequest)
+func _OrderService_GetRetryOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRetryOrdersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).ListOrders(ctx, in)
+		return srv.(OrderServiceServer).GetRetryOrders(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/orders.OrderService/ListOrders",
+		FullMethod: "/orders.OrderService/GetRetryOrders",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).ListOrders(ctx, req.(*ListOrdersRequest))
+		return srv.(OrderServiceServer).GetRetryOrders(ctx, req.(*GetRetryOrdersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -132,10 +132,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_GetOrderOwner_Handler,
 		},
 		{
-			MethodName: "ListOrders",
-			Handler:    _OrderService_ListOrders_Handler,
+			MethodName: "GetRetryOrders",
+			Handler:    _OrderService_GetRetryOrders_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "orders.proto",
+	Metadata: "proto/orders.proto",
 }

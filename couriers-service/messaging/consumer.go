@@ -18,7 +18,7 @@ import (
 )
 
 type CourierRequestedEvent struct {
-	ID string `json:"id"`
+	OrderID string `json:"order_id"`
 }
 
 type OrderPickedUpEvent struct {
@@ -118,8 +118,8 @@ func handleCourierRequested(ctx context.Context, msg kafka.Message, courierStore
 	courier, err := courierStore.GetAvailable(ctx)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			slog.Info("no available couriers. Publishing failure event.", "order_id", receivedEvent.ID)
-			p.Produce(ctx, CourierSearchFailedTopic, []byte(receivedEvent.ID), msg.Value)
+			slog.Info("no available couriers. Publishing failure event.", "order_id", receivedEvent.OrderID)
+			p.Produce(ctx, CourierSearchFailedTopic, []byte(receivedEvent.OrderID), msg.Value)
 		} else {
 			slog.Error("failed to search available courier", "error", err)
 		}
@@ -128,7 +128,7 @@ func handleCourierRequested(ctx context.Context, msg kafka.Message, courierStore
 
 	delivery := models.Delivery{
 		CourierID: courier.ID,
-		OrderID:   receivedEvent.ID,
+		OrderID:   receivedEvent.OrderID,
 	}
 
 	if err := deliveryStore.Create(ctx, &delivery); err != nil {
@@ -150,10 +150,10 @@ func handleCourierRequested(ctx context.Context, msg kafka.Message, courierStore
 		slog.Error("failed to marshal courier for Kafka event", "error", err)
 		return
 	} else {
-		p.Produce(ctx, CourierAssignedTopic, []byte(receivedEvent.ID), eventBody)
+		p.Produce(ctx, CourierAssignedTopic, []byte(receivedEvent.OrderID), eventBody)
 	}
 
-	slog.Info("successfully assigned courier", "order_id", receivedEvent.ID)
+	slog.Info("successfully assigned courier", "order_id", receivedEvent.OrderID)
 }
 
 func handleOrderDelivered(ctx context.Context, msg kafka.Message, courierStore *store.CourierStore) {

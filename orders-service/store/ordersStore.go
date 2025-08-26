@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strings"
+	"time"
 
 	"github.com/MatTwix/Food-Delivery-Agregator/orders-service/models"
 	"github.com/jackc/pgx/v5"
@@ -156,14 +158,26 @@ func (s *OrderStore) GetForRetry(ctx context.Context, status string, nextRetryAt
 		SELECT
 		id, restaurant_id, user_id, total_price, status, courier_id, retry_count, max_retry_count, next_retry_at, created_at, updated_at
 		FROM orders
-		WHERE status = $1 AND next_retry_at <= to_timestamp($2)
+		WHERE status = $1 AND next_retry_at <= $2
 		ORDER BY next_retry_at ASC
-		LIMIT $3
 	`
+
+	args := []any{status}
+
+	if nextRetryAtLte == 0 {
+		orderQuery = strings.Replace(orderQuery, "$2", "NOW()", 1)
+	} else {
+		args = append(args, time.Unix(nextRetryAtLte, 0))
+	}
+
+	if limit > 0 {
+		orderQuery += " LIMIT $3"
+		args = append(args, limit)
+	}
 
 	var orders []models.Order
 
-	orderRows, err := s.db.Query(ctx, orderQuery, status, nextRetryAtLte, limit)
+	orderRows, err := s.db.Query(ctx, orderQuery, args...)
 	if err != nil {
 		return orders, nil
 	}

@@ -7,8 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/scheduler-service/clients"
 	"github.com/MatTwix/Food-Delivery-Agregator/scheduler-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/scheduler-service/messaging"
+	"github.com/MatTwix/Food-Delivery-Agregator/scheduler-service/scheduler"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -28,11 +31,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	// orderGRPCClient := clients.NewOrdersSerciceClient()
+	orderGRPCClient := clients.NewOrdersSerciceClient()
+	c := cron.New()
+
+	requestCourierJob := scheduler.NewRequestCourierJob(orderGRPCClient, kafkaProducer)
+	scheduler.RegisterJobs(c, requestCourierJob)
+
+	go c.Run()
 
 	<-ctx.Done()
 
 	slog.Info("shutting down servers")
+
+	c.Stop()
+	slog.Info("cron stopped")
 
 	kafkaProducer.Close()
 	slog.Info("Kafka producer closed")

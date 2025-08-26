@@ -6,7 +6,7 @@ option go_package = "github.com/MatTwix/Food-Delivery-Agregator/common/proto";
 
 service OrderService {
     rpc GetOrderOwner(GetOrderOwnerRequest) returns (GetOrderOwnerResponce);
-    rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponce);
+    rpc GetRetryOrders(GetRetryOrdersRequest) returns (GetRetryOrdersResponce);
 }
 
 message GetOrderOwnerRequest {
@@ -17,7 +17,7 @@ message GetOrderOwnerResponce {
     string user_id = 1;
 }
 
-message ListOrdersRequest {
+message GetRetryOrdersRequest {
     string status = 1;
     int64 next_retry_at_lte = 2;
     int32 limit = 3;
@@ -30,6 +30,6 @@ message OrderLite {
     int64 next_retry_at = 4;
 }
 
-message ListOrdersResponce {
+message GetRetryOrdersResponce {
     repeated OrderLite orders = 1;
 }

@@ -5,6 +5,7 @@ go 1.23.6
 require github.com/MatTwix/Food-Delivery-Agregator/common v0.0.0-0010101000000-00000000000
 
 require (
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/viper v1.20.1
 	google.golang.org/grpc v1.74.2
 )
