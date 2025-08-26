@@ -27,15 +27,16 @@ A microservices-based backend system for a food delivery platform, designed to h
 
 ### Services
 
-| Service                 | Port (HTTP) | Port (gRPC) | Database        | Description                                                                                             |
-| ----------------------- | ----------- | ----------- | --------------- | ------------------------------------------------------------------------------------------------------- |
-| **API Gateway**         | `3000`      | -           | -               | Single entry point. Handles routing, authentication, and request proxying.                            |
-| **Restaurants Service** | `3001`      | `4040`      | `postgres-db`   | Manages restaurant and menu item data. Provides a gRPC endpoint for menu queries.                       |
-| **Orders Service**      | `3002`      | -           | `orders-db`     | Manages the entire order lifecycle. Acts as the central orchestrator for the order processing saga.       |
-| **Couriers Service**    | `3003`      | -           | `couriers-db`   | Manages couriers, their availability, and assignment to orders.                                         |
-| **Users Service**       | `3004`| -           | `users-db`      | Manages user registration, login, password hashing, and JWT generation/refresh.                         |
-| **Payments Service**    | `(internal)`| -           | -               | Simulates payment processing. Subscribes to `order.created` events and publishes payment outcomes.        |
-| **Notifications Service**| `(internal)`| -           | -               | Subscribes to various system events to simulate sending notifications to users.                          |
+| Service                  | Port (HTTP)  | Port (gRPC) | Database        | Description                                                                                             |
+| ------------------------ | ------------ | ----------- | --------------- | ------------------------------------------------------------------------------------------------------- |
+| **API Gateway**          | `3000`       | -           | -               | Single entry point. Handles routing, authentication, and request proxying.                              |
+| **Restaurants Service**  | `3001`       | `4040`      | `postgres-db`   | Manages restaurant and menu item data. Provides a gRPC endpoint for menu queries.                       |
+| **Orders Service**       | `3002`       | `4040`      | `orders-db`     | Manages the entire order lifecycle. Acts as the central orchestrator for the order processing saga.     |
+| **Couriers Service**     | `3003`       | -           | `couriers-db`   | Manages couriers, their availability, and assignment to orders.                                         |
+| **Users Service**        | `3004`       | -           | `users-db`      | Manages user registration, login, password hashing, and JWT generation/refresh.                         |
+| **Payments Service**     | `(internal)` | -           | -               | Simulates payment processing. Subscribes to `order.created` events and publishes payment outcomes.      |
+| **Notifications Service**| `(internal)` | -           | -               | Subscribes to various system events to simulate sending notifications to users.                         |
+| **Scheduler Service**    | `(internal)` | -           | -               | Manages repeating processes like available courier searching.                                           |
 
 ---
 
@@ -496,32 +497,33 @@ The following ports are used by the system when running with Docker Compose:
 
 ### Application Services
 
-| Service | Port | Protocol | Purpose | Access |
-|---------|------|----------|---------|--------|
-| **API Gateway** | `3000` | HTTP | Main application entry point | Public |
-| **Restaurants Service** | `3001` | HTTP | Restaurant management API | Internal |
-| **Restaurants Service** | `4040` | gRPC | Menu item queries | Internal |
-| **Orders Service** | `3002` | HTTP | Order management API | Internal |
-| **Couriers Service** | `3003` | HTTP | Courier management API | Internal |
-| **Users Service** | `3004` | HTTP | User authentication & management | Internal |
+| Service                 | Port   | Protocol | Purpose                              | Access   |
+|-------------------------|--------|----------|--------------------------------------|----------|
+| **API Gateway**         | `3000` | HTTP     | Main application entry point         | Public   |
+| **Restaurants Service** | `3001` | HTTP     | Restaurant management API            | Internal |
+| **Restaurants Service** | `4040` | gRPC     | Menu item queries                    | Internal |
+| **Orders Service**      | `3002` | HTTP     | Order management API                 | Internal |
+| **Orders Service**      | `4040` | gRPC     | Order owner and retry orders queries | Internal |
+| **Couriers Service**    | `3003` | HTTP     | Courier management API               | Internal |
+| **Users Service**       | `3004` | HTTP     | User authentication & management     | Internal |
 
 ### Infrastructure Services
 
-| Service | Port | Protocol | Purpose | Access |
-|---------|------|----------|---------|--------|
-| **Kafka** | `9092` | TCP | Internal Kafka broker | Internal |
-| **Kafka** | `29092` | TCP | External Kafka access | External |
-| **Kafdrop** | `19000` | HTTP | Kafka Web UI | Development |
-| **Zookeeper** | `2181` | TCP | Kafka coordination | Internal |
+| Service       | Port    | Protocol | Purpose               | Access      |
+|---------------|---------|----------|-----------------------|-------------|
+| **Kafka**     | `9092`  | TCP      | Internal Kafka broker | Internal    |
+| **Kafka**     | `29092` | TCP      | External Kafka access | External    |
+| **Kafdrop**   | `19000` | HTTP     | Kafka Web UI          | Development |
+| **Zookeeper** | `2181`  | TCP      | Kafka coordination    | Internal    |
 
 ### Database Services
 
-| Service | Port | Protocol | Database | Access |
-|---------|------|----------|----------|--------|
-| **postgres-db** | `5432` | TCP | Restaurants data | Development |
-| **orders-db** | `5433` | TCP | Orders data | Development |
-| **couriers-db** | `5434` | TCP | Couriers data | Development |
-| **users-db** | `5435` | TCP | Users data | Development |
+| Service         | Port   | Protocol | Database         | Access      |
+|-----------------|--------|----------|------------------|-------------|
+| **postgres-db** | `5432` | TCP      | Restaurants data | Development |
+| **orders-db**   | `5433` | TCP      | Orders data      | Development |
+| **couriers-db** | `5434` | TCP      | Couriers data    | Development |
+| **users-db**    | `5435` | TCP      | Users data       | Development |
 
 ### Port Usage Summary
 
