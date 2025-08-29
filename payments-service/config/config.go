@@ -17,8 +17,7 @@ type Config struct {
 		Topics struct {
 			PaymentSucceeded string `mapstructure:"payment_succeeded"`
 			PaymentFailed    string `mapstructure:"payment_failed"`
-			OrderCreated     string `mapstructure:"order_created"`
-			OrderUpdated     string `mapstructure:"order_updated"`
+			PaymentRequested string `mapstructure:"payment_requested"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }

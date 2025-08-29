@@ -141,11 +141,24 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventBody, err := json.Marshal(order)
+	orderEventBody, err := json.Marshal(order)
 	if err != nil {
 		slog.Error("failed to marshal order for Kafka event", "error", err)
 	} else {
-		h.producer.Produce(r.Context(), messaging.OrderCreatedTopic, []byte(order.ID), eventBody)
+		h.producer.Produce(r.Context(), messaging.OrderCreatedTopic, []byte(order.ID), orderEventBody)
+	}
+
+	paymentEvent := messaging.PaymentRequestedEvent{
+		OrderID:    order.ID,
+		UserID:     order.UserID,
+		TotalPrice: order.TotalPrice,
+	}
+
+	paymentEventBody, err := json.Marshal(paymentEvent)
+	if err != nil {
+		slog.Error("failed to marshal event for Kafka", "error", err)
+	} else {
+		h.producer.Produce(r.Context(), messaging.PaymentRequestedTopic, []byte(order.ID), paymentEventBody)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

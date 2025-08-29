@@ -21,6 +21,12 @@ type CourierAssignedEvent struct {
 	CourierID string `json:"courier_id"`
 }
 
+type PaymentRequestedEvent struct {
+	OrderID    string  `json:"order_id"`
+	UserID     string  `json:"user_id"`
+	TotalPrice float64 `json:"total_price"`
+}
+
 //TODO: refactor some consumers: make order delivery status changing be provided by single consumer
 
 func StartConsumers(ctx context.Context, restaurantStore *store.RestaurantStore, orderStore *store.OrderStore, p *Producer) {

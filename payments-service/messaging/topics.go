@@ -14,9 +14,7 @@ import (
 var (
 	PaymentSucceededTopic string
 	PaymentFailedTopic    string
-
-	OrderCreatedTopic string
-	OrderUpdatedTopic string
+	PaymentRequestedTopic string
 )
 
 var Topics []string
@@ -24,15 +22,12 @@ var Topics []string
 func InitTopicsNames() {
 	PaymentSucceededTopic = config.Cfg.Kafka.Topics.PaymentSucceeded
 	PaymentFailedTopic = config.Cfg.Kafka.Topics.PaymentFailed
-	OrderCreatedTopic = config.Cfg.Kafka.Topics.OrderCreated
-	OrderUpdatedTopic = config.Cfg.Kafka.Topics.OrderUpdated
+	PaymentRequestedTopic = config.Cfg.Kafka.Topics.PaymentRequested
 
 	Topics = []string{
 		PaymentSucceededTopic,
 		PaymentFailedTopic,
-
-		OrderCreatedTopic,
-		OrderUpdatedTopic,
+		PaymentRequestedTopic,
 	}
 }
 

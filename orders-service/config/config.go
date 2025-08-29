@@ -37,6 +37,7 @@ type Config struct {
 
 			PaymentSucceeded string `mapstructure:"payment_succeeded"`
 			PaymentFailed    string `mapstructure:"payment_failed"`
+			PaymentRequested string `mapstructure:"payment_requested"`
 
 			CourierRequested    string `mapstructure:"courier_requested"`
 			CourierAssigned     string `mapstructure:"courier_assigned"`

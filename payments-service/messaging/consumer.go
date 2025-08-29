@@ -13,14 +13,14 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type OrderCreatedEvent struct {
-	ID         string  `json:"id"`
+type PaymentRequestedEvent struct {
+	OrderID    string  `json:"order_id"`
 	UserID     string  `json:"user_id"`
 	TotalPrice float64 `json:"total_price"`
 }
 
 func StartConsumers(ctx context.Context, p *Producer) {
-	go startTopicConsumer(ctx, OrderCreatedTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
+	go startTopicConsumer(ctx, PaymentRequestedTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
 		handleOrderCreated(ctx, msg, p)
 	})
 }
@@ -73,23 +73,23 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 }
 
 func handleOrderCreated(ctx context.Context, msg kafka.Message, p *Producer) {
-	var event OrderCreatedEvent
+	var event PaymentRequestedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
-		slog.Error("failed to unmarshal event", "event", OrderCreatedTopic, "error", err)
+		slog.Error("failed to unmarshal event", "event", PaymentRequestedTopic, "error", err)
 		return
 	}
 
-	slog.Info("processing payment", "order_od", event.ID, "total_price", event.TotalPrice)
+	slog.Info("processing payment", "order_id", event.OrderID, "total_price", event.TotalPrice)
 
 	// imitating payment process
 
 	time.Sleep(5 * time.Second)
 
 	if rand.Float32() < 0.8 {
-		slog.Info("payment SUCCEEDED", "order_id", event.ID)
-		p.Produce(ctx, PaymentSucceededTopic, []byte(event.ID), msg.Value)
+		slog.Info("payment SUCCEEDED", "order_id", event.OrderID)
+		p.Produce(ctx, PaymentSucceededTopic, []byte(event.OrderID), msg.Value)
 	} else {
-		slog.Info("payment FAILED", "order_id", event.ID)
-		p.Produce(ctx, PaymentFailedTopic, []byte(event.ID), msg.Value)
+		slog.Info("payment FAILED", "order_id", event.OrderID)
+		p.Produce(ctx, PaymentFailedTopic, []byte(event.OrderID), msg.Value)
 	}
 }

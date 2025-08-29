@@ -5,5 +5,4 @@ kafka:
   topics:
     payment_succeeded: "payment.succeeded"
     payment_failed: "payment.failed"
-    order_created: "order.created"
-    order_updated: "order.updated"
+    payment_requested: "payment.requested"
