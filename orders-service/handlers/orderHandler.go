@@ -165,3 +165,36 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(order)
 }
+
+func (h *OrderHandler) RequestPayment(w http.ResponseWriter, r *http.Request) {
+	orderID := chi.URLParam(r, "id")
+	userID := r.Header.Get("X-User-Id")
+	if userID == "" {
+		http.Error(w, "User ID is missing", http.StatusBadRequest)
+		return
+	}
+
+	totalPrice, err := h.store.GetTotalPrice(r.Context(), orderID)
+	if err != nil {
+		slog.Error("failed to get total price", "orderID", orderID, "error", err)
+		http.Error(w, "Error getting total price", http.StatusInternalServerError)
+		return
+	}
+
+	event := messaging.PaymentRequestedEvent{
+		OrderID:    orderID,
+		UserID:     userID,
+		TotalPrice: totalPrice,
+	}
+
+	eventBody, err := json.Marshal(event)
+	if err != nil {
+		slog.Error("failed to marshal event for Kafka", "error", err)
+	} else {
+		h.producer.Produce(r.Context(), messaging.PaymentRequestedTopic, []byte(orderID), eventBody)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode("Payment requested successfully")
+}

@@ -232,6 +232,19 @@ func (s *OrderStore) GetForRetry(ctx context.Context, status string, nextRetryAt
 	return orders, nil
 }
 
+func (s *OrderStore) GetTotalPrice(ctx context.Context, orderID string) (float64, error) {
+	query := `
+		SELECT total_price
+		FROM orders
+		WHERE id = $1
+	`
+
+	var totalPrice float64
+	err := s.db.QueryRow(ctx, query, orderID).Scan(&totalPrice)
+
+	return totalPrice, err
+}
+
 func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {

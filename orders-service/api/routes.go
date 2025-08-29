@@ -34,6 +34,7 @@ func SetupRoutes(restaurantStore *store.RestaurantStore, orderStore *store.Order
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.AuthorizeOwnerOrRoles(orderStore.GetOwnerID, auth.RoleAdmin, auth.RoleManager))
 			r.Get("/{id}", orderHandler.GetOrderByID)
+			r.Post("/{id}/pay", orderHandler.RequestPayment)
 		})
 
 		r.Post("/", orderHandler.CreateOrder)
