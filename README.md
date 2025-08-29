@@ -261,6 +261,9 @@ All endpoints are accessed through the API Gateway on port `3000`.
 * **`GET /api/orders/orders/{id}`** - Get specific order (Admin/Manager/Owner only)
   * **Response:** Single order object
 
+* **`POST /api/orders/orders/{id}/pay`** - Request payment for order (Admin/Manager/Owner only)
+  * **Response:** Success/fail message
+
 #### Courier Management
 
 * **`GET /api/couriers/couriers`** - Get all couriers (Admin only)
