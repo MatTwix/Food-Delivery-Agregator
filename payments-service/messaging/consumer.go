@@ -21,7 +21,7 @@ type PaymentRequestedEvent struct {
 
 func StartConsumers(ctx context.Context, p *Producer) {
 	go startTopicConsumer(ctx, PaymentRequestedTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
-		handleOrderCreated(ctx, msg, p)
+		handlePaymentRequested(ctx, msg, p)
 	})
 }
 
@@ -72,7 +72,7 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 	}
 }
 
-func handleOrderCreated(ctx context.Context, msg kafka.Message, p *Producer) {
+func handlePaymentRequested(ctx context.Context, msg kafka.Message, p *Producer) {
 	var event PaymentRequestedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		slog.Error("failed to unmarshal event", "event", PaymentRequestedTopic, "error", err)
