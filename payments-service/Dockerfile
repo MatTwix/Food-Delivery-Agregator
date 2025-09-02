@@ -2,15 +2,18 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
+COPY common/go.mod common/go.sum ./common/
 COPY payments-service/go.mod payments-service/go.sum ./payments-service/
 
 RUN echo "go 1.24" >> go.work
 RUN echo "use (" >> go.work
+RUN echo "  ./common" >> go.work
 RUN echo "  ./payments-service" >> go.work
 RUN echo ")" >> go.work
 
 RUN go mod download
 
+COPY common/ ./common/
 COPY payments-service/ ./payments-service/
 COPY payments-service/config.yaml ./payments-service/config.yaml
 

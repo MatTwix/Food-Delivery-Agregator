@@ -9,6 +9,9 @@ import (
 )
 
 type Config struct {
+	GRPC struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
 	Kafka struct {
 		Brokers  string `mapstructure:"brokers"`
 		GroupIDs struct {

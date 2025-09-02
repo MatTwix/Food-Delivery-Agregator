@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	pb "github.com/MatTwix/Food-Delivery-Agregator/common/proto"
+
 	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/config"
 	"github.com/segmentio/kafka-go"
 )
@@ -19,9 +21,9 @@ type PaymentRequestedEvent struct {
 	TotalPrice float64 `json:"total_price"`
 }
 
-func StartConsumers(ctx context.Context, p *Producer) {
+func StartConsumers(ctx context.Context, p *Producer, ordersClient pb.OrderServiceClient) {
 	go startTopicConsumer(ctx, PaymentRequestedTopic, config.Cfg.Kafka.GroupIDs.Orders, func(ctx context.Context, msg kafka.Message) {
-		handlePaymentRequested(ctx, msg, p)
+		handlePaymentRequested(ctx, msg, p, ordersClient)
 	})
 }
 
@@ -72,10 +74,23 @@ func startTopicConsumer(ctx context.Context, topic, groupID string, handler func
 	}
 }
 
-func handlePaymentRequested(ctx context.Context, msg kafka.Message, p *Producer) {
+func handlePaymentRequested(ctx context.Context, msg kafka.Message, p *Producer, ordersClient pb.OrderServiceClient) {
 	var event PaymentRequestedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		slog.Error("failed to unmarshal event", "event", PaymentRequestedTopic, "error", err)
+		return
+	}
+
+	resp, err := ordersClient.GetOrderStatus(ctx, &pb.GetOrderStatusRequest{
+		OrderId: event.OrderID,
+	})
+	if err != nil {
+		slog.Error("failed to check order status", "error", err)
+		return
+	}
+
+	if resp.Status != "payment_failed" && resp.Status != "pending" {
+		slog.Info("order status does not imply payment", "status", resp.Status)
 		return
 	}
 

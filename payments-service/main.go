@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/clients"
 	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/config"
 	"github.com/MatTwix/Food-Delivery-Agregator/payments-service/messaging"
 )
@@ -29,7 +30,9 @@ func main() {
 	}
 	defer producer.Close()
 
-	messaging.StartConsumers(ctx, producer)
+	orderGRPCClient := clients.NewOrderServiceClient()
+
+	messaging.StartConsumers(ctx, producer, orderGRPCClient)
 
 	slog.Info("payments service started. Waiting for events...")
 	<-ctx.Done()
