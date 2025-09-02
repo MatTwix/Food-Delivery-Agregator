@@ -29,6 +29,17 @@ func (s *OrderGRPCServer) GetOrderOwner(ctx context.Context, req *pb.GetOrderOwn
 	}, nil
 }
 
+func (s *OrderGRPCServer) GetOrderStatus(ctx context.Context, req *pb.GetOrderStatusRequest) (*pb.GetOrderStatusResponce, error) {
+	status, err := s.orderStore.GetStatus(ctx, req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetOrderStatusResponce{
+		Status: status,
+	}, nil
+}
+
 func (s *OrderGRPCServer) GetRetryOrders(ctx context.Context, req *pb.GetRetryOrdersRequest) (*pb.GetRetryOrdersResponce, error) {
 	orders, err := s.orderStore.GetForRetry(ctx, req.Status, req.NextRetryAtLte, req.Limit)
 	if err != nil {

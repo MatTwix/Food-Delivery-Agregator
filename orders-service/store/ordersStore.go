@@ -153,6 +153,20 @@ func (s *OrderStore) GetOwnerID(ctx context.Context, orderID string) (string, er
 	return ownerID, err
 }
 
+func (s *OrderStore) GetStatus(ctx context.Context, orderID string) (string, error) {
+	query := `
+		SELECT status
+		FROM orders
+		WHERE id = $1
+	`
+
+	var status string
+
+	err := s.db.QueryRow(ctx, query, orderID).Scan(&status)
+
+	return status, err
+}
+
 func (s *OrderStore) GetForRetry(ctx context.Context, status string, nextRetryAtLte int64, limit int32) ([]models.Order, error) {
 	orderQuery := `
 		SELECT
