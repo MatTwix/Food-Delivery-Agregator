@@ -18,7 +18,7 @@ type DeleteExpiredTokensJob struct {
 
 func NewDeleteExpiredTokensJob(usersClient pb.UserServiceClient, p *messaging.Producer) *DeleteExpiredTokensJob {
 	return &DeleteExpiredTokensJob{
-		spec:        "@every 5s", // "0 0 * * 0" in real conditions
+		spec:        "@every 15m",
 		usersClient: usersClient,
 		producer:    p,
 	}
