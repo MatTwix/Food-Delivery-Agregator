@@ -87,6 +87,9 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	grpcServer.GracefulStop()
+	slog.Info("gRPC server stopped")
+
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		slog.Error("failed to shut down servers", "error", err)
 	}
