@@ -33,7 +33,7 @@ A microservices-based backend system for a food delivery platform, designed to h
 | **Restaurants Service**  | `3001`       | `4040`      | `postgres-db`   | Manages restaurant and menu item data. Provides a gRPC endpoint for menu queries.                       |
 | **Orders Service**       | `3002`       | `4040`      | `orders-db`     | Manages the entire order lifecycle. Acts as the central orchestrator for the order processing saga.     |
 | **Couriers Service**     | `3003`       | -           | `couriers-db`   | Manages couriers, their availability, and assignment to orders.                                         |
-| **Users Service**        | `3004`       | -           | `users-db`      | Manages user registration, login, password hashing, and JWT generation/refresh.                         |
+| **Users Service**        | `3004`       | `4040`           | `users-db`      | Manages user registration, login, password hashing, and JWT generation/refresh.                         |
 | **Payments Service**     | `(internal)` | -           | -               | Simulates payment processing. Subscribes to `order.created` events and publishes payment outcomes.      |
 | **Notifications Service**| `(internal)` | -           | -               | Subscribes to various system events to simulate sending notifications to users.                         |
 | **Scheduler Service**    | `(internal)` | -           | -               | Manages repeating processes like available courier searching.                                           |
