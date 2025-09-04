@@ -18,7 +18,8 @@ type Config struct {
 			Orders string `mapstructure:"orders"`
 		} `mapstructure:"group_ids"`
 		Topics struct {
-			CourierRequested string `mapstructure:"courier_requested"`
+			CourierRequested              string `mapstructure:"courier_requested"`
+			RefreshTokenDeletionRequested string `mapstructure:"refresh_token_deletion_requsted"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 }

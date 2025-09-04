@@ -13,15 +13,19 @@ import (
 
 var (
 	CourierRequestedTopic string
+
+	RefreshTokenDeletionRequestedTopic string
 )
 
 var Topics []string
 
 func InitTopicsNames() {
 	CourierRequestedTopic = config.Cfg.Kafka.Topics.CourierRequested
+	RefreshTokenDeletionRequestedTopic = config.Cfg.Kafka.Topics.RefreshTokenDeletionRequested
 
 	Topics = []string{
 		CourierRequestedTopic,
+		RefreshTokenDeletionRequestedTopic,
 	}
 }
 

@@ -6,3 +6,4 @@ kafka:
     orders: "scheduler-service-group-orders"
   topics:
     courier_requested: "courier.requested"
+    refresh_token_deletion_requsted: "refresh_token.deletion.requested"

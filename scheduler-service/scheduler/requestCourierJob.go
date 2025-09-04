@@ -11,15 +11,21 @@ import (
 )
 
 type RequestCourierJob struct {
+	spec         string
 	ordersClient pb.OrderServiceClient
 	producer     *messaging.Producer
 }
 
 func NewRequestCourierJob(ordersClient pb.OrderServiceClient, p *messaging.Producer) *RequestCourierJob {
 	return &RequestCourierJob{
+		spec:         "@every 30s",
 		ordersClient: ordersClient,
 		producer:     p,
 	}
+}
+
+func (j *RequestCourierJob) Spec() string {
+	return j.spec
 }
 
 func (j *RequestCourierJob) Run() {

@@ -31,11 +31,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	orderGRPCClient := clients.NewOrdersSerciceClient()
+	ordersGRPCClient := clients.NewOrdersSerciceClient()
+	usersGRPCClient := clients.NewUsersServiceClient()
+
 	c := cron.New()
 
-	requestCourierJob := scheduler.NewRequestCourierJob(orderGRPCClient, kafkaProducer)
-	scheduler.RegisterJobs(c, requestCourierJob)
+	requestCourierJob := scheduler.NewRequestCourierJob(ordersGRPCClient, kafkaProducer)
+	deleteExpiredTokensJob := scheduler.NewDeleteExpiredTokensJob(usersGRPCClient, kafkaProducer)
+
+	scheduler.RegisterJobs(c, requestCourierJob, deleteExpiredTokensJob)
 
 	go c.Run()
 
