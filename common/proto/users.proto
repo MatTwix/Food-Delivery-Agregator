@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package users;
+
+option go_package = "github.com/MatTwix/Food-Delivery-Agregator/common/proto";
+
+service UserService {
+    rpc GetExpiredRefreshTokensIDs(GetExpiredRefreshTokensIDsRequest) returns (GetExpiredRefreshTokensIDsResponce);
+}
+
+message GetExpiredRefreshTokensIDsRequest {
+    int64 before_date = 1;
+}
+
+message GetExpiredRefreshTokensIDsResponce {
+    repeated string token_ids = 1;
+}
