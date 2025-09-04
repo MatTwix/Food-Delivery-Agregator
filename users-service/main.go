@@ -53,6 +53,8 @@ func main() {
 		Handler: router,
 	}
 
+	messaging.StartConsumers(ctx, tokenStore)
+
 	go func() {
 		lis, err := net.Listen("tcp", ":"+config.Cfg.GRPC.Port)
 		if err != nil {

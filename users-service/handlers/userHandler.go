@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	commonAuth "github.com/MatTwix/Food-Delivery-Agregator/common/auth"
 	"github.com/MatTwix/Food-Delivery-Agregator/users-service/auth"
@@ -137,6 +138,8 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Token:     refreshToken,
 		ExpiresAt: refreshExpiresAt,
 	}
+
+	token.ExpiresAt = time.Now()
 
 	if err := h.tokenStore.SaveRefreshToken(r.Context(), &token); err != nil {
 		slog.Error("failed to save token to db", "error", err)

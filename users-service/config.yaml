@@ -8,6 +8,7 @@ kafka:
   brokers: ""
   group_ids:
     users: "users-service-group"
+    tokens: "users-service-group-tokens"
   topics:
     users_role_assigned: "users.role.assigned"
     refresh_token_deletion_requsted: "refresh_token.deletion.requested"
