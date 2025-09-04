@@ -13,14 +13,21 @@ import (
 
 var (
 	UsersRoleAssignedTopic string
+
+	RefreshTokenDeletionRequestedTopic string
 )
 
 var Topics []string
 
 func InitTopicsNames() {
 	UsersRoleAssignedTopic = config.Cfg.Kafka.Topics.UsersRoleAssigned
+
+	RefreshTokenDeletionRequestedTopic = config.Cfg.Kafka.Topics.RefreshTokenDeletionRequested
+
 	Topics = []string{
 		UsersRoleAssignedTopic,
+
+		RefreshTokenDeletionRequestedTopic,
 	}
 }
 

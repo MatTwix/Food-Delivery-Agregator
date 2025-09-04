@@ -21,10 +21,12 @@ type Config struct {
 	Kafka struct {
 		Brokers  string `mapstructure:"brokers"`
 		GroupIDs struct {
-			Users string `mapstructure:"users"`
+			Users  string `mapstructure:"users"`
+			Tokens string `mapstructure:"tokens"`
 		} `mapstructure:"group_ids"`
 		Topics struct {
-			UsersRoleAssigned string `mapstructure:"users_role_assigned"`
+			UsersRoleAssigned             string `mapstructure:"users_role_assigned"`
+			RefreshTokenDeletionRequested string `mapstructure:"refresh_token_deletion_requsted"`
 		} `mapstructure:"topics"`
 	} `mapstructure:"kafka"`
 	JWT struct {
