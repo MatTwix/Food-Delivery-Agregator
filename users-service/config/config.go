@@ -12,6 +12,9 @@ type Config struct {
 	HTTP struct {
 		Port string `mapstructure:"port"`
 	} `mapstructure:"HTTP"`
+	GRPC struct {
+		Port string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
 	DB struct {
 		Source string `mapstructure:"source"`
 	} `mapstructure:"db"`

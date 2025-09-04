@@ -172,7 +172,7 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.tokenStore.DeleteRefreshToken(r.Context(), req.RefreshToken); err != nil {
+	if err = h.tokenStore.DeleteRefreshTokenByToken(r.Context(), req.RefreshToken); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			http.Error(w, "Refresh token expired", http.StatusUnauthorized)
 			return
