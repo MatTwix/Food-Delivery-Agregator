@@ -231,6 +231,22 @@ func handleCourierSearchFailed(ctx context.Context, msg kafka.Message, store *st
 	orderID := string(msg.Key)
 	slog.Info("handling event", "topic", CourierSearchFailedTopic, "order_id", orderID)
 
+	retriesExceeded, err := store.IncreaseRetryCounter(ctx, orderID)
+	if err != nil {
+		slog.Error("failed to increase retries count", "order_id", orderID, "error", err)
+		return
+	}
+
+	if retriesExceeded {
+		if err := store.UpdateStatus(ctx, orderID, "retries_count_exceeded"); err != nil {
+			slog.Error("failed to update order status to 'retries_count_exceeded'", "order_id", orderID, "error", err)
+			return
+		}
+
+		slog.Info("order retries count exceeded, status updated to 'retries_count_exceeded'", "order_id", orderID)
+		return
+	}
+
 	if err := store.UpdateStatus(ctx, orderID, "no_couriers_available"); err != nil {
 		slog.Error("failed to update order status to 'no_available_couriers'", "order_id", orderID, "error", err)
 		return

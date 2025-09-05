@@ -172,7 +172,7 @@ func (s *OrderStore) GetForRetry(ctx context.Context, status string, nextRetryAt
 		SELECT
 		id, restaurant_id, user_id, total_price, status, courier_id, retry_count, max_retry_count, next_retry_at, created_at, updated_at
 		FROM orders
-		WHERE status = $1 AND next_retry_at <= $2
+		WHERE status = $1 AND next_retry_at <= $2 AND retry_count < max_retry_count
 		ORDER BY next_retry_at ASC
 	`
 
@@ -294,6 +294,27 @@ func (s *OrderStore) Create(ctx context.Context, order *models.Order) error {
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (s *OrderStore) IncreaseRetryCounter(ctx context.Context, orderID string) (retriesExceeded bool, err error) {
+	query := `
+		UPDATE orders
+		SET retry_count = retry_count + 1
+		WHERE id = $1 AND retry_count < max_retry_count
+		RETURNING retry_count, max_retry_count
+	`
+
+	var retryCount, maxRetryCount int
+
+	if err = s.db.QueryRow(ctx, query, orderID).Scan(&retryCount, &maxRetryCount); err != nil {
+		if err == pgx.ErrNoRows {
+			return true, nil
+		}
+
+		return false, err
+	}
+
+	return false, nil
 }
 
 func (s *OrderStore) UpdateStatus(ctx context.Context, orderID string, status string) error {
